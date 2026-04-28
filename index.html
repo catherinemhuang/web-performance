@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAME — Enter the Game</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+
+<body>
+
+<div id="cursor"></div>
+
+<div id="p5-canvas-container"></div>
+
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div class="coord tl" id="coord-tl">00.000 / 00.000</div>
+<div class="coord br">Let's Play v1.0</div>
+
+<div id="ui">
+  <div class="title-wrap">
+    <p class="subtitle">follow the dots — consume everything</p>
+  </div>
+
+  <div class="field-wrap">
+    <label class="field-label">enter your name</label>
+    <div class="dot-input-container">
+      <canvas class="dots-canvas" id="input-dots"></canvas>
+      <input id="name-input" type="text" maxlength="16">
+      <div id="name-display"></div>
+    </div>
+  </div>
+
+  <div class="btn-wrap">
+    <canvas class="dots-canvas" id="btn-dots"></canvas>
+    <button id="start-btn">LET'S START</button>
+  </div>
+</div>
+
+<div id="welcome">
+  <div id="welcome-text"></div>
+  <div id="welcome-sub">GOOD LUCK OUT THERE</div>
+</div>
+
+<!-- JS FILES -->
+<script src="main.js"></script>
+<script src="sketch.js"></script>
+
+</body>
+</html>

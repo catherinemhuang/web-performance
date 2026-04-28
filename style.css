@@ -1,0 +1,242 @@
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  :root {
+    --cyan: #00c8ff;
+    --green: #00ff96;
+    --dark: #141414;
+    --mid: #1e1e1e;
+    --dim: rgba(0,200,255,0.15);
+  }
+ 
+  body {
+    background: var(--dark);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    cursor: none;
+  }
+ 
+  /* p5 canvas sits behind everything */
+  #p5-canvas-container {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+ 
+  /* Custom cursor dot */
+  #cursor {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--cyan);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px var(--cyan);
+    transition: transform 0.05s;
+  }
+ 
+  /* Main UI layer */
+  #ui {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    pointer-events: none;
+  }
+ 
+  /* TITLE */
+  .title-wrap {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+ 
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 14vw, 160px);
+    letter-spacing: 0.12em;
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--cyan);
+    text-shadow:
+      0 0 40px rgba(0,200,255,0.3),
+      0 0 120px rgba(0,200,255,0.1);
+    user-select: none;
+  }
+ 
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: rgba(0,200,255,0.5);
+    text-transform: uppercase;
+    margin-top: 200px;
+  }
+ 
+  /* DOT-MATRIX name input */
+  .field-wrap {
+    pointer-events: all;
+    position: relative;
+    margin-bottom: 32px;
+  }
+ 
+  .field-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+    text-align: center;
+  }
+ 
+  /* The input is invisible; dots render on canvas overlay */
+  .dot-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+ 
+  #name-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: transparent;
+    caret-color: var(--cyan);
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    letter-spacing: 0.2em;
+    width: 280px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    padding: 16px 24px;
+  }
+ 
+  /* Dot-matrix border box */
+  .dot-box {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+ 
+  /* Visible name display over the input */
+  #name-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 0.2em;
+    color: var(--green);
+    text-shadow: 0 0 10px var(--green);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 3;
+    min-height: 1em;
+  }
+ 
+  /* DOT-MATRIX button */
+  .btn-wrap {
+    pointer-events: all;
+    position: relative;
+  }
+ 
+  #start-btn {
+    background: transparent;
+    border: none;
+    cursor: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.3em;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+    padding: 20px 60px;
+    position: relative;
+    z-index: 2;
+    transition: color 0.2s, text-shadow 0.2s;
+  }
+ 
+  #start-btn:hover {
+    color: #fff;
+    text-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan);
+  }
+ 
+  #start-btn:active {
+    transform: scale(0.97);
+  }
+ 
+  /* Dot canvases that render button/input outlines */
+  .dots-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+ 
+  /* Welcome flash */
+  #welcome {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+ 
+  #welcome.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+ 
+  #welcome-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(40px, 8vw, 80px);
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-shadow: 0 0 40px var(--green);
+  }
+ 
+  #welcome-sub {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: rgba(0,255,150,0.5);
+  }
+ 
+  /* Corner decor */
+  .corner {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    z-index: 5;
+    opacity: 0.3;
+  }
+  .corner.tl { top: 20px; left: 20px; border-top: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+  .corner.tr { top: 20px; right: 20px; border-top: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+  .corner.bl { bottom: 20px; left: 20px; border-bottom: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+  .corner.br { bottom: 20px; right: 20px; border-bottom: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+ 
+  .coord {
+    position: fixed;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(0,200,255,0.2);
+    z-index: 5;
+  }
+  .coord.tl { top: 28px; left: 70px; }
+  .coord.br { bottom: 28px; right: 70px; }
