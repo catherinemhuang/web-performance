@@ -175,6 +175,31 @@
     transform: scale(0.97);
   }
  
+   
+  #start-btn1 {
+    background: transparent;
+    border: none;
+    cursor: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.3em;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+    padding: 20px 60px;
+    position: relative;
+    z-index: 2;
+    transition: color 0.2s, text-shadow 0.2s;
+  }
+ 
+  #start-btn1:hover {
+    color: #fff;
+    text-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan);
+  }
+ 
+  #start-btn1:active {
+    transform: scale(0.97);
+  }
+  
   /* Dot canvases that render button/input outlines */
   .dots-canvas {
     position: absolute;

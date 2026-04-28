@@ -1,3 +1,8 @@
+// ─── GLOBAL STATE (shared with p5) ─────
+window.gameState = "intro";
+window.foods = [];
+window.whoAmIgenerated = false;
+
 // ─── Cursor ─────────────────────────────
 const cursor = document.getElementById('cursor');
 const coordTL = document.getElementById('coord-tl');
@@ -7,7 +12,7 @@ document.addEventListener('mousemove', e => {
   cursor.style.top = e.clientY + 'px';
 
   coordTL.textContent =
-    `${(e.clientX/window.innerWidth*100).toFixed(2)} / ${(e.clientY/window.innerHeight*100).toFixed(2)}`;
+    `${(e.clientX / window.innerWidth * 100).toFixed(2)} / ${(e.clientY / window.innerHeight * 100).toFixed(2)}`;
 });
 
 // ─── Dot Borders ────────────────────────
@@ -27,12 +32,12 @@ function drawDotBorder(canvas, color, spacing = 10) {
 
   for (let c = 0; c < cols; c++) {
     for (let r2 = 0; r2 < rows; r2++) {
-      if (c===0 || c===cols-1 || r2===0 || r2===rows-1) {
-        const x = xOff + c*spacing;
-        const y = yOff + r2*spacing;
+      if (c === 0 || c === cols - 1 || r2 === 0 || r2 === rows - 1) {
+        const x = xOff + c * spacing;
+        const y = yOff + r2 * spacing;
 
         ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI*2);
+        ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -45,6 +50,8 @@ function initDotCanvases() {
 
   const inputWrap = document.querySelector('.dot-input-container');
   const btnWrap = document.querySelector('.btn-wrap');
+
+  if (!inputWrap || !btnWrap) return;
 
   inputDots.width = inputWrap.offsetWidth;
   inputDots.height = inputWrap.offsetHeight;
@@ -59,15 +66,18 @@ function initDotCanvases() {
 window.addEventListener('load', () => {
   setTimeout(initDotCanvases, 100);
 });
+
 window.addEventListener('resize', initDotCanvases);
 
 // ─── Input display ──────────────────────
 const nameInput = document.getElementById('name-input');
 const nameDisplay = document.getElementById('name-display');
 
-nameInput.addEventListener('input', () => {
-  nameDisplay.textContent = nameInput.value;
-});
+if (nameInput) {
+  nameInput.addEventListener('input', () => {
+    nameDisplay.textContent = nameInput.value;
+  });
+}
 
 // ─── Start button ───────────────────────
 document.getElementById('start-btn').addEventListener('click', () => {
@@ -82,4 +92,17 @@ document.getElementById('start-btn').addEventListener('click', () => {
   setTimeout(() => {
     welcome.classList.remove('show');
   }, 2800);
+});
+
+// ─── LET'S GO BUTTON (STATE SWITCH FIXED) ─────
+document.getElementById('start-btn1').addEventListener('click', () => {
+  document.getElementById('ui').style.display = 'none';
+  document.getElementById('welcome').classList.remove('show');
+
+  // IMPORTANT: switch global state
+  window.gameState = "whoami";
+
+  // reset scene safely for p5
+  window.foods = [];
+  window.whoAmIgenerated = false;
 });
