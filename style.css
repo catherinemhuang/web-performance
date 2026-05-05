@@ -71,13 +71,6 @@
     user-select: none;
   }
  
-  .subtitle {
-    font-size: 11px;
-    letter-spacing: 0.4em;
-    color: rgba(0,200,255,0.5);
-    text-transform: uppercase;
-    margin-top: 200px;
-  }
  
   /* DOT-MATRIX name input */
   .field-wrap {
