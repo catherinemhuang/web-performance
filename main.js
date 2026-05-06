@@ -1,7 +1,7 @@
 // ─── GLOBAL STATE (shared with p5) ─────
 window.gameState = "intro";
 window.foods = [];
-window.whoAmIgenerated = false;
+window.Chapter1generated = false;
 
 // ─── Cursor ─────────────────────────────
 const cursor = document.getElementById('cursor');
@@ -100,9 +100,9 @@ document.getElementById('start-btn1').addEventListener('click', () => {
   document.getElementById('welcome').classList.remove('show');
 
   // IMPORTANT: switch global state
-  window.gameState = "whoami";
+  window.gameState = "Chapter1";
 
   // reset scene safely for p5
   window.foods = [];
-  window.whoAmIgenerated = false;
+  window.Chapter1generated = false;
 });

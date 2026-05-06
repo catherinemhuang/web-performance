@@ -230,12 +230,6 @@
     text-shadow: 0 0 40px var(--green);
   }
  
-  #welcome-sub {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: rgba(0,255,150,0.5);
-  }
- 
   /* Corner decor */
   .corner {
     position: fixed;
