@@ -135,3 +135,30 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('resize', initDotCanvases);
+
+// ─── BACKGROUND AUDIO ────────────────
+const bgAudio = getEl('bg-audio');
+const muteBtn = getEl('mute-btn');
+const iconSound = getEl('icon-sound');
+const iconMute = getEl('icon-mute');
+let bgStarted = false;
+
+function startBgAudio() {
+  if (bgStarted || !bgAudio) return;
+  bgStarted = true;
+  bgAudio.volume = 0.5;
+  bgAudio.play().catch(() => {});
+}
+
+// Start on first interaction
+document.addEventListener('mousedown', startBgAudio, { once: true });
+document.addEventListener('click', startBgAudio, { once: true });
+
+if (muteBtn) {
+  muteBtn.addEventListener('click', () => {
+    if (!bgAudio) return;
+    bgAudio.muted = !bgAudio.muted;
+    iconSound.style.display = bgAudio.muted ? 'none' : '';
+    iconMute.style.display  = bgAudio.muted ? '' : 'none';
+  });
+}

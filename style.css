@@ -438,3 +438,31 @@
     transform: translateY(0);
   }
 }
+
+/* ── MUTE BUTTON ── */
+#mute-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 500;
+  background: transparent;
+  border: none;
+  cursor: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: rgba(0, 200, 255, 0.4);
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mute-btn:hover {
+  color: var(--cyan);
+}
+
+#mute-btn svg {
+  width: 20px;
+  height: 20px;
+}

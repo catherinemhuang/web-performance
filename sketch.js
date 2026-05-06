@@ -1,6 +1,26 @@
 new p5(function (p) {
 
   let snake;
+  let lastNoteTime = 0;
+  var notes = ['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','G5','A5'];
+
+  // Create synth immediately — it exists before any user interaction
+  var synth = new Tone.Synth({
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.4 },
+    volume: -12
+  }).toDestination();
+
+  // Unlock the audio context on first gesture (required by browsers)
+  var audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    Tone.start();
+  }
+
+  document.addEventListener('mousedown', unlockAudio);
+  document.addEventListener('click', unlockAudio);
 
   p.setup = function () {
     let cnv = p.createCanvas(p.windowWidth, p.windowHeight);
@@ -15,6 +35,10 @@ new p5(function (p) {
 
     generateTextPoints("We are human.");
     generateRandomFood(150);
+  };
+
+  p.mousePressed = function () {
+    unlockAudio();
   };
 
   p.draw = function () {
@@ -127,19 +151,27 @@ new p5(function (p) {
   }
 
   function generateTextPoints(txt) {
-    var pg = p.createGraphics(p.width, p.height);
-    pg.pixelDensity(1);
-    pg.background(0);
-    pg.fill(255);
-    pg.textAlign(p.CENTER, p.CENTER);
-    pg.textSize(80);
-    pg.text(txt, p.width / 2, p.height * 0.3);
-    pg.loadPixels();
+    // Use a native canvas instead of p5.createGraphics — much faster, no p5 overhead
+    var offscreen = document.createElement('canvas');
+    offscreen.width = p.width;
+    offscreen.height = p.height;
+    var ctx = offscreen.getContext('2d');
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, p.width, p.height);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 80px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(txt, p.width / 2, p.height * 0.3);
 
-    for (var x = 0; x < p.width; x += 6) {
-      for (var y = 0; y < p.height; y += 6) {
+    var imageData = ctx.getImageData(0, 0, p.width, p.height);
+    var pixels = imageData.data;
+    var step = 8; // slightly coarser grid = fewer dots = less work per frame
+
+    for (var x = 0; x < p.width; x += step) {
+      for (var y = 0; y < p.height; y += step) {
         var i = (x + y * p.width) * 4;
-        if (pg.pixels[i] > 50) {
+        if (pixels[i] > 50) {
           window.foods.push({ pos: p.createVector(x, y), isText: true });
         }
       }
@@ -173,11 +205,14 @@ new p5(function (p) {
   }
 
   function checkEating() {
-    for (var i = window.foods.length - 1; i >= 0; i--) {
+    var eaten = 0;
+    var maxPerFrame = 3; // cap: never eat more than 3 dots in one draw tick
+    for (var i = window.foods.length - 1; i >= 0 && eaten < maxPerFrame; i--) {
       var d = p.dist(snake.head.x, snake.head.y, window.foods[i].pos.x, window.foods[i].pos.y);
       if (d < snake.size) {
         var wasText = window.foods[i].isText;
         window.foods.splice(i, 1);
+        eaten++;
 
         if (!wasText &&
             window.gameState !== "Chapter1complete" &&
@@ -190,6 +225,14 @@ new p5(function (p) {
         }
 
         snake.grow();
+
+        // throttle notes: max one every 80ms so rapid eating never stacks audio calls
+        var now = performance.now();
+        if (now - lastNoteTime > 80) {
+          lastNoteTime = now;
+          var note = notes[Math.floor(Math.random() * notes.length)];
+          synth.triggerAttackRelease(note, "16n");
+        }
       }
     }
   }
