@@ -3,20 +3,31 @@ window.gameState = "intro";
 window.foods = [];
 window.Chapter1generated = false;
 
-// ─── Cursor ─────────────────────────────
-const cursor = document.getElementById('cursor');
-const coordTL = document.getElementById('coord-tl');
+// ─── SAFE ELEMENT GETTER ───────────────
+function getEl(id) {
+  return document.getElementById(id);
+}
+
+// ─── Cursor ───────────────────────────
+const cursor = getEl('cursor');
+const coordTL = getEl('coord-tl');
 
 document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top = e.clientY + 'px';
+  if (cursor) {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  }
 
-  coordTL.textContent =
-    `${(e.clientX / window.innerWidth * 100).toFixed(2)} / ${(e.clientY / window.innerHeight * 100).toFixed(2)}`;
+  if (coordTL) {
+    coordTL.textContent =
+      `${(e.clientX / window.innerWidth * 100).toFixed(2)} / ${(e.clientY / window.innerHeight * 100).toFixed(2)}`;
+  }
 });
 
-// ─── Dot Borders ────────────────────────
+// ─── Dot Borders ──────────────────────
 function drawDotBorder(canvas, color, spacing = 10) {
+  if (!canvas) return;
+
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
 
@@ -45,13 +56,13 @@ function drawDotBorder(canvas, color, spacing = 10) {
 }
 
 function initDotCanvases() {
-  const inputDots = document.getElementById('input-dots');
-  const btnDots = document.getElementById('btn-dots');
+  const inputDots = getEl('input-dots');
+  const btnDots = getEl('btn-dots');
 
   const inputWrap = document.querySelector('.dot-input-container');
   const btnWrap = document.querySelector('.btn-wrap');
 
-  if (!inputWrap || !btnWrap) return;
+  if (!inputWrap || !btnWrap || !inputDots || !btnDots) return;
 
   inputDots.width = inputWrap.offsetWidth;
   inputDots.height = inputWrap.offsetHeight;
@@ -63,46 +74,64 @@ function initDotCanvases() {
   drawDotBorder(btnDots, 'rgba(0,200,255,0.5)');
 }
 
-window.addEventListener('load', () => {
+// Run AFTER DOM is ready (fixes most bugs)
+window.addEventListener('DOMContentLoaded', () => {
   setTimeout(initDotCanvases, 100);
+
+  // ─── Input display ──────────────────
+  const nameInput = getEl('name-input');
+  const nameDisplay = getEl('name-display');
+
+  if (nameInput && nameDisplay) {
+    nameInput.addEventListener('input', () => {
+      nameDisplay.textContent = nameInput.value;
+    });
+  }
+
+  // ─── Start button ───────────────────
+  const startBtn = getEl('start-btn');
+  if (startBtn) {
+    startBtn.addEventListener('click', () => {
+      const name = (nameInput?.value || '').trim() || 'STRANGER';
+
+      const welcome = getEl('welcome');
+      const welcomeText = getEl('welcome-text');
+
+      if (welcomeText) {
+        welcomeText.textContent = `WELCOME, ${name.toUpperCase()}`;
+      }
+
+      if (welcome) {
+        welcome.classList.add('show');
+
+        setTimeout(() => {
+          welcome.classList.remove('show');
+        }, 2800);
+      }
+    });
+  }
+
+  // ─── LET'S GO BUTTON ────────────────
+  const startBtn1 = getEl('start-btn1');
+  if (startBtn1) {
+    startBtn1.addEventListener('click', () => {
+      const ui = getEl('ui');
+      const welcome = getEl('welcome');
+
+      if (ui) ui.style.display = 'none';
+      if (welcome) welcome.classList.remove('show');
+
+      // IMPORTANT: switch global state
+      window.gameState = "Chapter1";
+
+      // reset scene safely for p5
+      window.foods = [];
+      window.Chapter1generated = false;
+
+      // reset snake size to original
+      if (window.resetSnake) window.resetSnake();
+    });
+  }
 });
 
 window.addEventListener('resize', initDotCanvases);
-
-// ─── Input display ──────────────────────
-const nameInput = document.getElementById('name-input');
-const nameDisplay = document.getElementById('name-display');
-
-if (nameInput) {
-  nameInput.addEventListener('input', () => {
-    nameDisplay.textContent = nameInput.value;
-  });
-}
-
-// ─── Start button ───────────────────────
-document.getElementById('start-btn').addEventListener('click', () => {
-  const name = nameInput.value.trim() || 'STRANGER';
-
-  const welcome = document.getElementById('welcome');
-  document.getElementById('welcome-text').textContent =
-    `WELCOME, ${name.toUpperCase()}`;
-
-  welcome.classList.add('show');
-
-  setTimeout(() => {
-    welcome.classList.remove('show');
-  }, 2800);
-});
-
-// ─── LET'S GO BUTTON (STATE SWITCH FIXED) ─────
-document.getElementById('start-btn1').addEventListener('click', () => {
-  document.getElementById('ui').style.display = 'none';
-  document.getElementById('welcome').classList.remove('show');
-
-  // IMPORTANT: switch global state
-  window.gameState = "Chapter1";
-
-  // reset scene safely for p5
-  window.foods = [];
-  window.Chapter1generated = false;
-});
