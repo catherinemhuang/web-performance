@@ -1,8 +1,8 @@
 let handshake = document.querySelector("#handshake");
 
 handshake.addEventListener("click", async () => {
-	await Tone.start();
-	handshake.style.display = "none";
+  await Tone.start();
+  handshake.style.display = "none";
 });
 
 new p5(function (p) {
@@ -14,26 +14,33 @@ new p5(function (p) {
   // ─── HEALTH / DECAY SYSTEM ───────────────────────────
   var snakeHealth = 100;
   var lastEatTime = 0;
-  var HEALTH_DRAIN_PER_MS = 0.02; // drains fully in ~20s; requires ~5 dots/sec
+  var HEALTH_DRAIN_PER_MS = 0.02;
   var HEALTH_PER_EAT = 3;
   var MIN_SNAKE_SIZE = 3;
   var failureShown = false;
   var ufos = [];
-  var failureReason = "starved"; // "starved" or "caught"
+  var failureReason = "starved";
 
   // ─── DECISION STATE ──────────────────────────────────
   var decisionYesLeft = 0;
   var decisionNoLeft = 0;
   var decisionActive = false;
 
-  // Create synth immediately — it exists before any user interaction
+  // ─── FAILURE CHAPTER TRACKING ────────────────────────
+  var lastActiveChapter = "Chapter1";
+
+  // ─── THE END GAME STATE ──────────────────────────────
+  var theEndDots = [];
+  var bullets = [];
+  var shootCooldown = 0;
+  var theEndCleared = false;
+
   var synth = new Tone.Synth({
     oscillator: { type: 'sine' },
     envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.4 },
     volume: -12
   }).toDestination();
 
-  // Unlock the audio context on first gesture (required by browsers)
   var audioUnlocked = false;
   function unlockAudio() {
     if (audioUnlocked) return;
@@ -60,7 +67,7 @@ new p5(function (p) {
     failureShown = false;
     ufos = [];
 
-    generateTextPoints("We are human.");
+    generateTextPoints("We are human.", 0);
     generateRandomFood(150);
   };
 
@@ -112,7 +119,7 @@ new p5(function (p) {
           "NEXT CHAPTER \u2192",
           function() {
             window.gameState = "Chapter2";
-                snake.speed *= 1.25;
+            snake.speed *= 1.25;
             window.Chapter2generated = false;
             window.foods = [];
             resetSnake();
@@ -137,8 +144,7 @@ new p5(function (p) {
           "NEXT CHAPTER \u2192",
           function() {
             window.gameState = "Chapter3";
-                snake.speed *= 1.4;
-
+            snake.speed *= 1.4;
             window.Chapter3generated = false;
             window.foods = [];
             resetSnake();
@@ -168,7 +174,6 @@ new p5(function (p) {
       snake.show();
     }
 
-    // Decision state: snake eats YES / NO dots
     if (window.gameState === "Chapter3complete") {
       drawFoods();
       snake.update();
@@ -190,10 +195,12 @@ new p5(function (p) {
     }
   };
 
+  // ─── CHAPTERS ────────────────────────────────────────
+
   function Chapter1() {
     if (!window.Chapter1generated) {
       window.foods = [];
-      generateTextPoints("Are we alone here?");
+      generateTextPoints("Are we?", 0);
       generateRandomFood(80);
       window.Chapter1generated = true;
       snakeHealth = 100;
@@ -207,7 +214,7 @@ new p5(function (p) {
   function Chapter2() {
     if (!window.Chapter2generated) {
       window.foods = [];
-      generateTextPoints("What could be out there?");
+      generateTextPoints("What could?", 2);
       generateRandomFood(80);
       window.Chapter2generated = true;
       snakeHealth = 100;
@@ -221,7 +228,7 @@ new p5(function (p) {
   function Chapter3() {
     if (!window.Chapter3generated) {
       window.foods = [];
-      generateTextPoints("Are they like us?");
+      generateTextPoints("Are they?", 3);
       generateRandomFood(80);
       window.Chapter3generated = true;
       snakeHealth = 100;
@@ -232,8 +239,10 @@ new p5(function (p) {
     drawFoods();
   }
 
-  function generateTextPoints(txt) {
-    // Use a native canvas instead of p5.createGraphics — much faster, no p5 overhead
+  // ─── FOOD GENERATION ─────────────────────────────────
+
+  function generateTextPoints(txt, scatter) {
+    scatter = scatter || 0;
     var offscreen = document.createElement('canvas');
     offscreen.width = p.width;
     offscreen.height = p.height;
@@ -248,13 +257,15 @@ new p5(function (p) {
 
     var imageData = ctx.getImageData(0, 0, p.width, p.height);
     var pixels = imageData.data;
-    var step = 8; // slightly coarser grid = fewer dots = less work per frame
+    var step = 8;
 
     for (var x = 0; x < p.width; x += step) {
       for (var y = 0; y < p.height; y += step) {
         var i = (x + y * p.width) * 4;
         if (pixels[i] > 50) {
-          window.foods.push({ pos: p.createVector(x, y), isText: true });
+          var ox = scatter > 0 ? p.random(-scatter, scatter) : 0;
+          var oy = scatter > 0 ? p.random(-scatter, scatter) : 0;
+          window.foods.push({ pos: p.createVector(x + ox, y + oy), isText: true });
         }
       }
     }
@@ -269,13 +280,15 @@ new p5(function (p) {
     }
   }
 
+  // ─── DRAW FOODS ───────────────────────────────────────
+
   function drawFoods() {
     p.noStroke();
     window.foods.forEach(function(f) {
-      if (f.choice === 'yes')       p.fill(0, 255, 150);   // green
-      else if (f.choice === 'no')   p.fill(0, 200, 255);   // cyan
-      else if (f.isText)            p.fill(255);            // white
-      else                          p.fill(0, 255, 150);    // random food
+      if (f.choice === 'yes')     p.fill(0, 255, 150);
+      else if (f.choice === 'no') p.fill(0, 200, 255);
+      else if (f.isText)          p.fill(255);
+      else                        p.fill(0, 255, 150);
       p.circle(f.pos.x, f.pos.y, 6);
     });
   }
@@ -288,9 +301,11 @@ new p5(function (p) {
     return count;
   }
 
+  // ─── EAT LOGIC ───────────────────────────────────────
+
   function checkEating() {
     var eaten = 0;
-    var maxPerFrame = 3; // cap: never eat more than 3 dots in one draw tick
+    var maxPerFrame = 3;
     for (var i = window.foods.length - 1; i >= 0 && eaten < maxPerFrame; i--) {
       var d = p.dist(snake.head.x, snake.head.y, window.foods[i].pos.x, window.foods[i].pos.y);
       if (d < snake.size) {
@@ -299,7 +314,6 @@ new p5(function (p) {
         window.foods.splice(i, 1);
         eaten++;
 
-        // ─── DECISION DOT TRACKING ───────────────────
         if (decisionActive) {
           if (choice === 'yes') decisionYesLeft--;
           if (choice === 'no')  decisionNoLeft--;
@@ -345,11 +359,9 @@ new p5(function (p) {
 
         snake.grow();
 
-        // ─── HEALTH RESTORE ON EAT ───────────────────────
         snakeHealth = Math.min(100, snakeHealth + HEALTH_PER_EAT);
         lastEatTime = performance.now();
 
-        // throttle notes: max one every 80ms so rapid eating never stacks audio calls
         var now = performance.now();
         if (now - lastNoteTime > 80) {
           lastNoteTime = now;
@@ -359,6 +371,8 @@ new p5(function (p) {
       }
     }
   }
+
+  // ─── SNAKE ───────────────────────────────────────────
 
   function resetSnake() {
     snake.body = [];
@@ -408,6 +422,7 @@ new p5(function (p) {
   };
 
   // ─── HEALTH BAR ──────────────────────────────────────
+
   function drawHealthBar() {
     var barW = 200, barH = 6;
     var x = p.width / 2 - barW / 2, y = 28;
@@ -440,13 +455,11 @@ new p5(function (p) {
   }
 
   // ─── FAILURE ─────────────────────────────────────────
-  var lastActiveChapter = "Chapter1"; // track which chapter we died in
 
   function triggerFailure(reason) {
     if (failureShown) return;
     failureShown = true;
     failureReason = reason || "starved";
-    // Remember which chapter we were on before overwriting gameState
     if (window.gameState === "Chapter1" ||
         window.gameState === "Chapter2" ||
         window.gameState === "Chapter3") {
@@ -485,7 +498,6 @@ new p5(function (p) {
         decisionYesLeft = 0;
         decisionNoLeft = 0;
         resetSnake();
-        // Restore speed for the chapter we're restarting
         if (lastActiveChapter === "Chapter2") {
           snake.speed = 2.5 * 1.25;
         } else if (lastActiveChapter === "Chapter3") {
@@ -499,17 +511,16 @@ new p5(function (p) {
   }
 
   // ─── UFO SYSTEM ──────────────────────────────────────
+
   function spawnUFOs(count) {
     ufos = [];
     for (var i = 0; i < count; i++) {
-      // Spawn each UFO at a random edge of the screen
       var edge = Math.floor(Math.random() * 4);
       var x, y;
       if (edge === 0)      { x = p.random(p.width); y = -60; }
       else if (edge === 1) { x = p.random(p.width); y = p.height + 60; }
       else if (edge === 2) { x = -60; y = p.random(p.height); }
       else                 { x = p.width + 60; y = p.random(p.height); }
-      // Stagger speeds so multiple UFOs don't stack on top of each other
       ufos.push(new UFO(x, y, 0.8 + i * 0.3));
     }
   }
@@ -528,18 +539,14 @@ new p5(function (p) {
   function UFO(startX, startY, spd) {
     this.pos = p.createVector(startX, startY);
     this.speed = spd;
-    this.wobbleOffset = p.random(1000); // so each UFO wobbles independently
+    this.wobbleOffset = p.random(1000);
     this.beamFlicker = 0;
     this.lightAngle = 0;
   }
 
   UFO.prototype.update = function() {
-    // Chase the snake head with slight wobble perpendicular to direction
     var target = snake.head.copy();
     var dir = p5.Vector.sub(target, this.pos);
-    var d = dir.mag();
-
-    // Add a sinusoidal wobble perpendicular to movement direction
     dir.normalize();
     var perp = p.createVector(-dir.y, dir.x);
     var wobble = Math.sin(p.frameCount * 0.05 + this.wobbleOffset) * 1.5;
@@ -548,18 +555,17 @@ new p5(function (p) {
       p5.Vector.mult(perp, wobble)
     );
     this.pos.add(move);
-
     this.beamFlicker = 0.6 + 0.4 * Math.sin(p.frameCount * 0.12 + this.wobbleOffset);
     this.lightAngle += 0.04;
   };
 
   UFO.prototype.collides = function(headPos, headSize) {
     var d = p.dist(this.pos.x, this.pos.y, headPos.x, headPos.y);
-    return d < (28 + headSize * 0.5); // disc radius ~28 + half the snake head
+    return d < (28 + headSize * 0.5);
   };
-UFO.prototype.draw = function() {
-    var x = this.pos.x, y = this.pos.y;
 
+  UFO.prototype.draw = function() {
+    var x = this.pos.x, y = this.pos.y;
     p.push();
     p.translate(x, y);
 
@@ -567,14 +573,12 @@ UFO.prototype.draw = function() {
     var innerR = 25;
     var outerR = 28;
 
-    // Outer glow
     p.noStroke();
     p.fill(224, 119, 238, 22);
     p.circle(0, 0, (outerR + 13) * 2);
     p.fill(224, 119, 238, 44);
     p.circle(0, 0, (outerR + 5) * 2);
 
-    // Spiky star body (rotates via lightAngle)
     p.fill(5, 132, 212);
     p.stroke(255, 255, 255, 160);
     p.strokeWeight(0.5);
@@ -587,17 +591,17 @@ UFO.prototype.draw = function() {
     }
     p.endShape(p.CLOSE);
 
-    // Core sphere
     p.noStroke();
     p.fill(89, 201, 188);
     p.circle(0, 0, innerR * 2);
-
-    // Highlight
     p.fill(182, 236, 162, 190);
     p.circle(-4, -5, 7);
 
     p.pop();
   };
+
+  // ─── CHAPTER END UI ──────────────────────────────────
+
   function showChapterEndUI(bottomText, btnLabel, onNext) {
     if (document.getElementById("chapter-end-overlay")) return;
 
@@ -635,6 +639,8 @@ UFO.prototype.draw = function() {
     }
   }
 
+  // ─── DECISION UI ─────────────────────────────────────
+
   function showDecisionUI() {
     decisionActive = true;
     decisionYesLeft = 0;
@@ -643,14 +649,13 @@ UFO.prototype.draw = function() {
 
     var step = 8;
 
-    // ── Question label ──
     var labelEl = document.createElement('div');
     labelEl.id = 'decision-label';
-    labelEl.style.cssText = 'position:fixed;top:18%;left:0;right:0;text-align:center;font-family:\'MyFont\',monospace;font-size:24px;letter-spacing:0.3em;color:#fff;pointer-events:none;z-index:50;text-transform:uppercase;';
+    labelEl.style.cssText = 'position:fixed;top:18%;left:0;right:0;text-align:center;font-family:\'Space Mono\',monospace;font-size:18px;letter-spacing:0.3em;color:#fff;pointer-events:none;z-index:50;text-transform:uppercase;';
     labelEl.textContent = 'Send a radio signal?';
     document.body.appendChild(labelEl);
 
-    // ── YES — left side ──
+    // YES — left side
     var yesCanvas = document.createElement('canvas');
     yesCanvas.width = p.width;
     yesCanvas.height = p.height;
@@ -674,7 +679,7 @@ UFO.prototype.draw = function() {
       }
     }
 
-    // ── NO — right side ──
+    // NO — right side
     var noCanvas = document.createElement('canvas');
     noCanvas.width = p.width;
     noCanvas.height = p.height;
@@ -699,6 +704,8 @@ UFO.prototype.draw = function() {
     }
   }
 
+  // ─── ENDING SCREEN ───────────────────────────────────
+
   function showEndingScreen(id, lines, colors) {
     if (document.getElementById(id + "-overlay")) return;
 
@@ -720,7 +727,7 @@ UFO.prototype.draw = function() {
       });
     });
 
-    // After 5 seconds fade out, then launch THE END shooter
+    // After 5 seconds fade out, launch THE END shooter
     setTimeout(function() {
       overlay.style.transition = "opacity 1s ease";
       overlay.style.opacity = "0";
@@ -730,6 +737,8 @@ UFO.prototype.draw = function() {
       }, 1000);
     }, 5000);
   }
+
+  // ─── DOT BORDER HELPER ───────────────────────────────
 
   function drawDotBorderLocal(canvas, color, spacing) {
     spacing = spacing || 10;
@@ -756,11 +765,6 @@ UFO.prototype.draw = function() {
 
   // ─── THE END — SPACE INVADERS ────────────────────────
 
-  var theEndDots = [];       // target dots making up "THE END"
-  var bullets = [];          // player bullets flying upward
-  var shootCooldown = 0;     // frames until next shot allowed
-  var theEndCleared = false; // true once all dots destroyed
-
   function initTheEndGame() {
     theEndDots = [];
     bullets = [];
@@ -768,7 +772,6 @@ UFO.prototype.draw = function() {
     theEndCleared = false;
     window.gameState = "theEnd";
 
-    // Render "THE END" onto an offscreen canvas and sample dots
     var off = document.createElement('canvas');
     off.width = p.width;
     off.height = p.height;
@@ -794,34 +797,29 @@ UFO.prototype.draw = function() {
   }
 
   function drawTheEndGame() {
-    // ── Shooter fires toward mouse position ──
-    // Auto-fire: shoot every 8 frames
+    // Auto-fire every 8 frames toward mouse
     shootCooldown--;
     if (shootCooldown <= 0 && p.mouseX >= 0 && p.mouseX <= p.width) {
       var bx = p.mouseX;
       var by = p.height - 30;
-      // Aim straight upward toward the mouse Y (always fires upward)
       var ang = Math.atan2(p.mouseY - by, p.mouseX - bx);
-      // Clamp: only allow angles pointing upward (between -PI and 0)
       if (ang >= 0) ang = -Math.PI / 2;
       var speed = 9;
       bullets.push({ x: bx, y: by, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed });
       shootCooldown = 8;
     }
 
-    // ── Update & draw bullets ──
+    // Update & draw bullets
     p.noStroke();
     for (var i = bullets.length - 1; i >= 0; i--) {
       bullets[i].x += bullets[i].vx;
       bullets[i].y += bullets[i].vy;
 
-      // Remove if off screen
       if (bullets[i].y < 0 || bullets[i].x < 0 || bullets[i].x > p.width) {
         bullets.splice(i, 1);
         continue;
       }
 
-      // Check collision with theEndDots
       var hit = false;
       for (var j = theEndDots.length - 1; j >= 0; j--) {
         if (!theEndDots[j].alive) continue;
@@ -830,10 +828,9 @@ UFO.prototype.draw = function() {
           theEndDots[j].alive = false;
           bullets.splice(i, 1);
           hit = true;
-          // Play a tiny hit note
-          var now = performance.now();
-          if (now - lastNoteTime > 60) {
-            lastNoteTime = now;
+          var nowT = performance.now();
+          if (nowT - lastNoteTime > 60) {
+            lastNoteTime = nowT;
             synth.triggerAttackRelease('C5', '32n');
           }
           break;
@@ -841,7 +838,6 @@ UFO.prototype.draw = function() {
       }
 
       if (!hit && i < bullets.length) {
-        // Draw bullet: small bright cyan dot with trail glow
         p.fill(0, 255, 150, 200);
         p.circle(bullets[i].x, bullets[i].y, 5);
         p.fill(0, 255, 150, 60);
@@ -849,36 +845,38 @@ UFO.prototype.draw = function() {
       }
     }
 
-    // ── Draw THE END dots ──
+    // Draw THE END dots
     var alive = 0;
     for (var k = 0; k < theEndDots.length; k++) {
       if (!theEndDots[k].alive) continue;
       alive++;
-      // Pulse: brightness flickers gently
       var flicker = 180 + 75 * Math.sin(p.frameCount * 0.04 + k * 0.3);
       p.fill(255, 255, 255, flicker);
       p.noStroke();
       p.circle(theEndDots[k].x, theEndDots[k].y, 7);
     }
 
-    // ── Draw shooter indicator at bottom (follows mouse X) ──
+    // Draw shooter at bottom following mouse
     var sx = p.constrain(p.mouseX, 20, p.width - 20);
     var sy = p.height - 30;
     p.noStroke();
-    // Glow base
     p.fill(0, 200, 255, 30);
     p.circle(sx, sy, 36);
     p.fill(0, 200, 255, 70);
     p.circle(sx, sy, 22);
-    // Core
     p.fill(0, 200, 255, 230);
     p.circle(sx, sy, 12);
-    // Barrel tip
     p.fill(0, 255, 150, 200);
     p.circle(sx, sy - 10, 5);
 
+    // Hint label
+    p.textFont('monospace');
+    p.textSize(9);
+    p.textAlign(p.CENTER);
+    p.fill(0, 200, 255, 80);
+    p.text('MOVE CURSOR — AUTO FIRE', p.width / 2, p.height - 8);
 
-    // ── Check cleared ──
+    // Check cleared
     if (alive === 0 && !theEndCleared) {
       theEndCleared = true;
       setTimeout(function() {
@@ -886,7 +884,8 @@ UFO.prototype.draw = function() {
         el.id = 'transmission-complete';
         el.style.cssText = 'position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999;cursor:none;';
         el.innerHTML =
-          '<div style="font-family:\'MyFont\',monospace;font-size:24px;letter-spacing:0.4em;color:rgba(0,255,150,0.7);text-transform:uppercase;">transmission complete</div>' +
+          '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(14px,2.5vw,22px);letter-spacing:0.4em;color:rgba(0,255,150,0.7);text-transform:uppercase;">transmission complete</div>' +
+          '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(9px,1.2vw,11px);letter-spacing:0.3em;color:rgba(0,200,255,0.4);text-transform:uppercase;animation:pulseOpacity 1.8s ease-in-out infinite;">click to return</div>';
         document.body.appendChild(el);
 
         el.addEventListener('click', function() {
@@ -894,7 +893,6 @@ UFO.prototype.draw = function() {
           el.style.opacity = '0';
           setTimeout(function() {
             if (el.parentNode) el.parentNode.removeChild(el);
-            // Reset all state and go back to intro
             window.foods = [];
             window.Chapter1generated = false;
             window.Chapter2generated = false;
@@ -905,8 +903,6 @@ UFO.prototype.draw = function() {
             theEndDots = [];
             bullets = [];
             theEndCleared = false;
-            var dlEl = document.getElementById('decision-label');
-            if (dlEl && dlEl.parentNode) dlEl.parentNode.removeChild(dlEl);
             resetSnake();
             snake.speed = 2.5;
             var ui = document.getElementById('ui');
@@ -914,7 +910,7 @@ UFO.prototype.draw = function() {
             if (ui) ui.style.display = '';
             if (welcome) welcome.classList.remove('show');
             window.gameState = 'intro';
-            generateTextPoints('We are human.');
+            generateTextPoints('We are human.', 0);
             generateRandomFood(150);
           }, 600);
         });
