@@ -200,7 +200,6 @@ h1 {
   transform: scale(0.97);
 }
 
-
 #start-btn1 {
   background: transparent;
   border: none;
@@ -212,7 +211,8 @@ h1 {
   padding: 20px 60px;
   position: relative;
   z-index: 2;
-  transition: color 0.2s,
+  opacity: 0;
+  transition: color 0.2s, opacity 0.5s ease;
 }
 
 #start-btn1:hover {
@@ -362,7 +362,7 @@ h1 {
   padding: 16px 52px;
   position: relative;
   z-index: 2;
-  transition: color 0.2s,
+  transition: color 0.2s;
 }
 
 .chapter-end-btn:hover {
@@ -424,7 +424,7 @@ h1 {
   padding: 20px 60px;
   position: relative;
   z-index: 2;
-  transition: color 0.2s,
+  transition: color 0.2s;
 }
 
 .yes-btn {
@@ -562,27 +562,11 @@ h1 {
 }
 
 @keyframes failureShake {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  15% {
-    transform: translateX(-8px);
-  }
-
-  30% {
-    transform: translateX(8px);
-  }
-
-  45% {
-    transform: translateX(-5px);
-  }
-
-  60% {
-    transform: translateX(5px);
-  }
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  30%       { transform: translateX(8px); }
+  45%       { transform: translateX(-5px); }
+  60%       { transform: translateX(5px); }
 }
 
 .failure-glitch {
@@ -620,71 +604,24 @@ h1 {
 }
 
 @keyframes glitchFlicker {
-
-  0%,
-  92%,
-  100% {
-    opacity: 1;
-  }
-
-  93% {
-    opacity: 0.7;
-  }
-
-  95% {
-    opacity: 0.3;
-  }
+  0%, 92%, 100% { opacity: 1; }
+  93%            { opacity: 0.7; }
+  95%            { opacity: 0.3; }
 }
 
 @keyframes glitchSliceA {
-
-  0%,
-  85%,
-  100% {
-    transform: translateX(0);
-    opacity: 0;
-  }
-
-  86% {
-    transform: translateX(-4px);
-    opacity: 0.7;
-  }
-
-  88% {
-    transform: translateX(4px);
-    opacity: 0.7;
-  }
+  0%, 85%, 100% { transform: translateX(0);   opacity: 0; }
+  86%            { transform: translateX(-4px); opacity: 0.7; }
+  88%            { transform: translateX(4px);  opacity: 0.7; }
 }
 
 @keyframes glitchSliceB {
-
-  0%,
-  78%,
-  100% {
-    transform: translateX(0);
-    opacity: 0;
-  }
-
-  79% {
-    transform: translateX(3px);
-    opacity: 0.7;
-  }
-
-  81% {
-    transform: translateX(-3px);
-    opacity: 0.7;
-  }
+  0%, 78%, 100% { transform: translateX(0);   opacity: 0; }
+  79%            { transform: translateX(3px);  opacity: 0.7; }
+  81%            { transform: translateX(-3px); opacity: 0.7; }
 }
 
-
 @keyframes pulseOpacity {
-
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 1;
-  }
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
 }

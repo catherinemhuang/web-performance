@@ -93,21 +93,49 @@ window.addEventListener('DOMContentLoaded', () => {
   if (startBtn) {
     startBtn.addEventListener('click', () => {
       const name = (nameInput?.value || '').trim() || 'STRANGER';
+      const fullText = `WELCOME, ${name.toUpperCase()}`;
 
       const welcome = getEl('welcome');
       const welcomeText = getEl('welcome-text');
+      const startBtn1 = getEl('start-btn1');
 
-      if (welcomeText) {
-        welcomeText.textContent = `WELCOME, ${name.toUpperCase()}`;
-      }
+      if (!welcome || !welcomeText) return;
 
-      if (welcome) {
-        welcome.classList.add('show');
+      // Hide the button until typing is done
+      if (startBtn1) startBtn1.style.opacity = '0';
 
-        setTimeout(() => {
-          welcome.classList.remove('show');
-        }, 2800);
-      }
+      welcomeText.textContent = '';
+      welcome.classList.add('show');
+
+      // Typewriter
+      const cursor = '\u258C';
+      let idx = 0;
+      welcomeText.textContent = cursor;
+
+      const typeInterval = setInterval(() => {
+        if (idx < fullText.length) {
+          welcomeText.textContent = fullText.slice(0, idx + 1) + cursor;
+          idx++;
+        } else {
+          // Blink cursor 3 times then reveal button
+          let blinks = 0;
+          const blinkInterval = setInterval(() => {
+            welcomeText.textContent = (blinks % 2 === 0)
+              ? fullText
+              : fullText + cursor;
+            blinks++;
+            if (blinks >= 6) {
+              clearInterval(blinkInterval);
+              welcomeText.textContent = fullText;
+              if (startBtn1) {
+                startBtn1.style.transition = 'opacity 0.5s ease';
+                startBtn1.style.opacity = '1';
+              }
+            }
+          }, 300);
+          clearInterval(typeInterval);
+        }
+      }, 60);
     });
   }
 

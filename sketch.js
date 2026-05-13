@@ -214,7 +214,7 @@ new p5(function (p) {
   function Chapter2() {
     if (!window.Chapter2generated) {
       window.foods = [];
-      generateTextPoints("What could be out there?", 2);
+      generateTextPoints("What could be out there?", 18);
       generateRandomFood(80);
       window.Chapter2generated = true;
       snakeHealth = 100;
@@ -228,7 +228,7 @@ new p5(function (p) {
   function Chapter3() {
     if (!window.Chapter3generated) {
       window.foods = [];
-      generateTextPoints("Are they like us?", 3);
+      generateTextPoints("Are they like us?", 48);
       generateRandomFood(80);
       window.Chapter3generated = true;
       snakeHealth = 100;
@@ -745,9 +745,10 @@ new p5(function (p) {
     overlay.id = id + "-overlay";
     overlay.className = "ending-overlay";
 
+    // Build empty line elements — typewriter fills them in
     var inner = '<div class="ending-lines">';
     lines.forEach(function(line, i) {
-      inner += '<div class="ending-line" style="color:' + colors[i] + ';text-shadow:0 0 40px ' + colors[i] + '">' + line + '</div>';
+      inner += '<div class="ending-line" style="color:' + colors[i] + ';text-shadow:0 0 40px ' + colors[i] + ';opacity:1;transform:none;animation:none;"></div>';
     });
     inner += '</div>';
     overlay.innerHTML = inner;
@@ -756,10 +757,52 @@ new p5(function (p) {
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         overlay.classList.add("visible");
+
+        var lineEls = overlay.querySelectorAll(".ending-line");
+        var cursor = '\u258C';
+        var CHAR_MS = 55;
+        var PAUSE_BETWEEN = 500; // ms gap between lines
+
+        // Type lines one after another
+        function typeLine(lineIdx) {
+          if (lineIdx >= lines.length) return;
+
+          var el = lineEls[lineIdx];
+          var text = lines[lineIdx];
+          var idx = 0;
+          el.textContent = cursor;
+
+          var typeInterval = setInterval(function() {
+            if (idx < text.length) {
+              el.textContent = text.slice(0, idx + 1) + cursor;
+              idx++;
+            } else {
+              // Blink cursor twice then move to next line
+              var blinks = 0;
+              var blinkInterval = setInterval(function() {
+                el.textContent = (blinks % 2 === 0) ? text : text + cursor;
+                blinks++;
+                if (blinks >= 4) {
+                  clearInterval(blinkInterval);
+                  el.textContent = text;
+                  setTimeout(function() {
+                    typeLine(lineIdx + 1);
+                  }, PAUSE_BETWEEN);
+                }
+              }, 280);
+              clearInterval(typeInterval);
+            }
+          }, CHAR_MS);
+        }
+
+        typeLine(0);
       });
     });
 
-    // After 5 seconds fade out, launch THE END shooter
+    // Calculate total type time then add buffer before transitioning
+    var totalChars = lines.reduce(function(sum, l) { return sum + l.length; }, 0);
+    var estimatedMs = totalChars * 55 + lines.length * (4 * 280 + 500) + 1500;
+
     setTimeout(function() {
       overlay.style.transition = "opacity 1s ease";
       overlay.style.opacity = "0";
@@ -767,7 +810,7 @@ new p5(function (p) {
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         initTheEndGame();
       }, 1000);
-    }, 5000);
+    }, estimatedMs);
   }
 
   // ─── DOT BORDER HELPER ───────────────────────────────
