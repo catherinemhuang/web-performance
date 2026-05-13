@@ -9,7 +9,7 @@ new p5(function (p) {
 
   let snake;
   let lastNoteTime = 0;
-  var notes = ['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','G5','A5'];
+  var notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'G5', 'A5'];
 
   // ─── HEALTH / DECAY SYSTEM ───────────────────────────
   var snakeHealth = 100;
@@ -79,8 +79,8 @@ new p5(function (p) {
     p.background(10);
 
     var isChapterActive = (window.gameState === "Chapter1" ||
-                           window.gameState === "Chapter2" ||
-                           window.gameState === "Chapter3");
+      window.gameState === "Chapter2" ||
+      window.gameState === "Chapter3");
 
     if (isChapterActive && !failureShown) {
       var now = performance.now();
@@ -117,7 +117,7 @@ new p5(function (p) {
         showChapterEndUI(
           "Perhaps not.",
           "NEXT CHAPTER \u2192",
-          function() {
+          function () {
             window.gameState = "Chapter2";
             snake.speed *= 1.25;
             window.Chapter2generated = false;
@@ -142,7 +142,7 @@ new p5(function (p) {
         showChapterEndUI(
           "Perhaps a signal should be sent out.",
           "NEXT CHAPTER \u2192",
-          function() {
+          function () {
             window.gameState = "Chapter3";
             snake.speed *= 1.4;
             window.Chapter3generated = false;
@@ -169,7 +169,7 @@ new p5(function (p) {
     }
 
     if (window.gameState === "Chapter1complete" ||
-        window.gameState === "Chapter2complete") {
+      window.gameState === "Chapter2complete") {
       snake.update();
       snake.show();
     }
@@ -275,7 +275,10 @@ new p5(function (p) {
     for (var i = 0; i < n; i++) {
       window.foods.push({
         pos: p.createVector(p.random(p.width), p.random(p.height)),
-        isText: false
+        isText: false,
+        vx: p.random(-0.3, 0.3),
+        vy: p.random(-0.3, 0.3),
+        blinkOffset: p.random(1000)
       });
     }
   }
@@ -284,11 +287,26 @@ new p5(function (p) {
 
   function drawFoods() {
     p.noStroke();
-    window.foods.forEach(function(f) {
-      if (f.choice === 'yes')     p.fill(0, 255, 150);
-      else if (f.choice === 'no') p.fill(0, 200, 255);
-      else if (f.isText)          p.fill(255);
-      else                        p.fill(0, 255, 150);
+    window.foods.forEach(function (f) {
+      if (!f.isText && f.vx !== undefined) {
+        f.pos.x += f.vx;
+        f.pos.y += f.vy;
+        if (f.pos.x < 0) f.pos.x = p.width;
+        if (f.pos.x > p.width) f.pos.x = 0;
+        if (f.pos.y < 0) f.pos.y = p.height;
+        if (f.pos.y > p.height) f.pos.y = 0;
+      }
+
+      if (f.choice === 'yes') {
+        p.fill(0, 255, 150);
+      } else if (f.choice === 'no') {
+        p.fill(0, 200, 255);
+      } else if (f.isText) {
+        p.fill(255);
+      } else {
+        var blink = 120 + 135 * Math.sin((p.frameCount * 0.04) + (f.blinkOffset || 0));
+        p.fill(0, 255, 150, blink);
+      }
       p.circle(f.pos.x, f.pos.y, 6);
     });
   }
@@ -310,13 +328,13 @@ new p5(function (p) {
       var d = p.dist(snake.head.x, snake.head.y, window.foods[i].pos.x, window.foods[i].pos.y);
       if (d < snake.size) {
         var wasText = window.foods[i].isText;
-        var choice  = window.foods[i].choice;
+        var choice = window.foods[i].choice;
         window.foods.splice(i, 1);
         eaten++;
 
         if (decisionActive) {
           if (choice === 'yes') decisionYesLeft--;
-          if (choice === 'no')  decisionNoLeft--;
+          if (choice === 'no') decisionNoLeft--;
 
           if (choice === 'yes' && decisionYesLeft <= 0) {
             decisionActive = false;
@@ -348,12 +366,15 @@ new p5(function (p) {
         }
 
         if (!wasText &&
-            window.gameState !== "Chapter1complete" &&
-            window.gameState !== "Chapter2complete" &&
-            window.gameState !== "Chapter3complete") {
+          window.gameState !== "Chapter1complete" &&
+          window.gameState !== "Chapter2complete" &&
+          window.gameState !== "Chapter3complete") {
           window.foods.push({
             pos: p.createVector(p.random(p.width), p.random(p.height)),
-            isText: false
+            isText: false,
+            vx: p.random(-0.3, 0.3),
+            vy: p.random(-0.3, 0.3),
+            blinkOffset: p.random(1000)
           });
         }
 
@@ -461,8 +482,8 @@ new p5(function (p) {
     failureShown = true;
     failureReason = reason || "starved";
     if (window.gameState === "Chapter1" ||
-        window.gameState === "Chapter2" ||
-        window.gameState === "Chapter3") {
+      window.gameState === "Chapter2" ||
+      window.gameState === "Chapter3") {
       lastActiveChapter = window.gameState;
     }
     window.gameState = "failed";
@@ -476,17 +497,17 @@ new p5(function (p) {
     overlay.id = "failure-overlay";
     overlay.innerHTML =
       '<div class="failure-inner">' +
-        '<div class="failure-glitch" data-text="SIGNAL LOST">SIGNAL LOST</div>' +
+      '<div class="failure-glitch" data-text="SIGNAL LOST">SIGNAL LOST</div>' +
       '</div>';
     document.body.appendChild(overlay);
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() { overlay.classList.add("visible"); });
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { overlay.classList.add("visible"); });
     });
-    overlay.addEventListener("click", function() {
+    overlay.addEventListener("click", function () {
       overlay.classList.remove("visible");
-      setTimeout(function() {
+      setTimeout(function () {
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        ["chapter-end-overlay","decision-overlay","endingYes-overlay","endingNo-overlay","decision-label"].forEach(function(id) {
+        ["chapter-end-overlay", "decision-overlay", "endingYes-overlay", "endingNo-overlay", "decision-label"].forEach(function (id) {
           var el = document.getElementById(id);
           if (el && el.parentNode) el.parentNode.removeChild(el);
         });
@@ -517,10 +538,10 @@ new p5(function (p) {
     for (var i = 0; i < count; i++) {
       var edge = Math.floor(Math.random() * 4);
       var x, y;
-      if (edge === 0)      { x = p.random(p.width); y = -60; }
+      if (edge === 0) { x = p.random(p.width); y = -60; }
       else if (edge === 1) { x = p.random(p.width); y = p.height + 60; }
       else if (edge === 2) { x = -60; y = p.random(p.height); }
-      else                 { x = p.width + 60; y = p.random(p.height); }
+      else { x = p.width + 60; y = p.random(p.height); }
       ufos.push(new UFO(x, y, 0.8 + i * 0.3));
     }
   }
@@ -544,7 +565,7 @@ new p5(function (p) {
     this.lightAngle = 0;
   }
 
-  UFO.prototype.update = function() {
+  UFO.prototype.update = function () {
     var target = snake.head.copy();
     var dir = p5.Vector.sub(target, this.pos);
     dir.normalize();
@@ -559,12 +580,12 @@ new p5(function (p) {
     this.lightAngle += 0.04;
   };
 
-  UFO.prototype.collides = function(headPos, headSize) {
+  UFO.prototype.collides = function (headPos, headSize) {
     var d = p.dist(this.pos.x, this.pos.y, headPos.x, headPos.y);
     return d < (28 + headSize * 0.5);
   };
 
-  UFO.prototype.draw = function() {
+  UFO.prototype.draw = function () {
     var x = this.pos.x, y = this.pos.y;
     p.push();
     p.translate(x, y);
@@ -610,13 +631,13 @@ new p5(function (p) {
     overlay.innerHTML =
       '<div class="chapter-end-text"></div>' +
       '<div class="btn-wrap chapter-end-btn-wrap" style="opacity:0;transition:opacity 0.5s ease;">' +
-        '<canvas class="dots-canvas chapter-end-dots-canvas"></canvas>' +
-        '<button class="chapter-end-btn">' + btnLabel + '</button>' +
+      '<canvas class="dots-canvas chapter-end-dots-canvas"></canvas>' +
+      '<button class="chapter-end-btn">' + btnLabel + '</button>' +
       '</div>';
     document.body.appendChild(overlay);
 
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
         overlay.classList.add("visible");
 
         // ── Typewriter effect ──
@@ -629,7 +650,7 @@ new p5(function (p) {
 
         textEl.textContent = cursor;
 
-        var typeInterval = setInterval(function() {
+        var typeInterval = setInterval(function () {
           if (idx < chars.length) {
             textEl.textContent = bottomText.slice(0, idx + 1) + cursor;
             idx++;
@@ -637,7 +658,7 @@ new p5(function (p) {
             // Blink cursor 3 times then remove it and show button
             textEl.textContent = bottomText + cursor;
             var blinks = 0;
-            var blinkInterval = setInterval(function() {
+            var blinkInterval = setInterval(function () {
               textEl.textContent = (blinks % 2 === 0)
                 ? bottomText
                 : bottomText + cursor;
@@ -667,7 +688,7 @@ new p5(function (p) {
     var el = document.getElementById("chapter-end-overlay");
     if (el) {
       el.classList.remove("visible");
-      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
     }
   }
 
@@ -747,15 +768,15 @@ new p5(function (p) {
 
     // Build empty line elements — typewriter fills them in
     var inner = '<div class="ending-lines">';
-    lines.forEach(function(line, i) {
+    lines.forEach(function (line, i) {
       inner += '<div class="ending-line" style="color:' + colors[i] + ';text-shadow:0 0 40px ' + colors[i] + ';opacity:1;transform:none;animation:none;"></div>';
     });
     inner += '</div>';
     overlay.innerHTML = inner;
     document.body.appendChild(overlay);
 
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
         overlay.classList.add("visible");
 
         var lineEls = overlay.querySelectorAll(".ending-line");
@@ -772,20 +793,20 @@ new p5(function (p) {
           var idx = 0;
           el.textContent = cursor;
 
-          var typeInterval = setInterval(function() {
+          var typeInterval = setInterval(function () {
             if (idx < text.length) {
               el.textContent = text.slice(0, idx + 1) + cursor;
               idx++;
             } else {
               // Blink cursor twice then move to next line
               var blinks = 0;
-              var blinkInterval = setInterval(function() {
+              var blinkInterval = setInterval(function () {
                 el.textContent = (blinks % 2 === 0) ? text : text + cursor;
                 blinks++;
                 if (blinks >= 4) {
                   clearInterval(blinkInterval);
                   el.textContent = text;
-                  setTimeout(function() {
+                  setTimeout(function () {
                     typeLine(lineIdx + 1);
                   }, PAUSE_BETWEEN);
                 }
@@ -800,13 +821,13 @@ new p5(function (p) {
     });
 
     // Calculate total type time then add buffer before transitioning
-    var totalChars = lines.reduce(function(sum, l) { return sum + l.length; }, 0);
+    var totalChars = lines.reduce(function (sum, l) { return sum + l.length; }, 0);
     var estimatedMs = totalChars * 55 + lines.length * (4 * 280 + 500) + 1500;
 
-    setTimeout(function() {
+    setTimeout(function () {
       overlay.style.transition = "opacity 1s ease";
       overlay.style.opacity = "0";
-      setTimeout(function() {
+      setTimeout(function () {
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         initTheEndGame();
       }, 1000);
@@ -954,7 +975,7 @@ new p5(function (p) {
     // Check cleared
     if (alive === 0 && !theEndCleared) {
       theEndCleared = true;
-      setTimeout(function() {
+      setTimeout(function () {
         var el = document.createElement('div');
         el.id = 'transmission-complete';
         el.style.cssText = 'position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999;cursor:none;';
@@ -963,10 +984,10 @@ new p5(function (p) {
           '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(9px,1.2vw,11px);letter-spacing:0.3em;color:rgba(170, 0, 255, 0.4);text-transform:uppercase;animation:pulseOpacity 1.8s ease-in-out infinite;">click to return</div>';
         document.body.appendChild(el);
 
-        el.addEventListener('click', function() {
+        el.addEventListener('click', function () {
           el.style.transition = 'opacity 0.6s ease';
           el.style.opacity = '0';
-          setTimeout(function() {
+          setTimeout(function () {
             if (el.parentNode) el.parentNode.removeChild(el);
             window.foods = [];
             window.Chapter1generated = false;
