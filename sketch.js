@@ -214,7 +214,7 @@ new p5(function (p) {
   function Chapter2() {
     if (!window.Chapter2generated) {
       window.foods = [];
-      generateTextPoints("What could be out there?", 18);
+      generateTextPoints("What could be out there?", 2);
       generateRandomFood(80);
       window.Chapter2generated = true;
       snakeHealth = 100;
@@ -228,7 +228,7 @@ new p5(function (p) {
   function Chapter3() {
     if (!window.Chapter3generated) {
       window.foods = [];
-      generateTextPoints("Are they like us?", 48);
+      generateTextPoints("Are they like us?", 3);
       generateRandomFood(80);
       window.Chapter3generated = true;
       snakeHealth = 100;
