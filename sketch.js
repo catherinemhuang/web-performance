@@ -650,7 +650,7 @@ new p5(function (p) {
                 if (dotCanvas && btnWrap) {
                   dotCanvas.width = btnWrap.offsetWidth;
                   dotCanvas.height = btnWrap.offsetHeight;
-                  drawDotBorderLocal(dotCanvas, "rgba(0,200,255,0.5)");
+                  drawDotBorderLocal(dotCanvas, "rgba(0, 251, 255, 0.77)");
                 }
               }
             }, 300);
@@ -959,8 +959,8 @@ new p5(function (p) {
         el.id = 'transmission-complete';
         el.style.cssText = 'position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999;cursor:none;';
         el.innerHTML =
-          '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(14px,2.5vw,22px);letter-spacing:0.4em;color:rgba(0,255,150,0.7);text-transform:uppercase;">transmission complete</div>' +
-          '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(9px,1.2vw,11px);letter-spacing:0.3em;color:rgba(0,200,255,0.4);text-transform:uppercase;animation:pulseOpacity 1.8s ease-in-out infinite;">click to return</div>';
+          '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(14px,2.5vw,22px);letter-spacing:0.4em;color:rgba(0, 255, 149, 0.81);text-transform:uppercase;">transmission complete</div>' +
+          '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(9px,1.2vw,11px);letter-spacing:0.3em;color:rgba(170, 0, 255, 0.4);text-transform:uppercase;animation:pulseOpacity 1.8s ease-in-out infinite;">click to return</div>';
         document.body.appendChild(el);
 
         el.addEventListener('click', function() {

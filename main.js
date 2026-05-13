@@ -70,8 +70,8 @@ function initDotCanvases() {
   btnDots.width = btnWrap.offsetWidth;
   btnDots.height = btnWrap.offsetHeight;
 
-  drawDotBorder(inputDots, 'rgba(0,255,150,0.5)');
-  drawDotBorder(btnDots, 'rgba(0,200,255,0.5)');
+  drawDotBorder(inputDots, 'rgba(7, 221, 214, 0.52)');
+  drawDotBorder(btnDots, 'rgba(183, 0, 255, 0.5)');
 }
 
 // Run AFTER DOM is ready (fixes most bugs)
