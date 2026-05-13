@@ -6,6 +6,11 @@
   padding: 0;
 }
 
+@font-face {
+  font-family: 'MyFont';
+  src: url('Asimovian/Asimovian-Regular.ttf') format('truetype');
+}
+
 :root {
   --cyan: #00c8ff;
   --green: #00ff96;
@@ -22,7 +27,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Space Mono';
+  font-family: 'MyFont';
   cursor: pointer;
   z-index: 9999;
   font-size: 20px;
@@ -46,7 +51,7 @@
 body {
   background: var(--dark);
   color: #fff;
-  font-family: 'Space Mono', monospace;
+  font-family: 'MyFont';
   overflow: hidden;
   height: 100vh;
   width: 100vw;
@@ -93,7 +98,7 @@ body {
 }
 
 h1 {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: clamp(72px, 14vw, 160px);
   letter-spacing: 0.12em;
   line-height: 0.9;
@@ -158,7 +163,7 @@ h1 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Space Mono', monospace;
+  font-family: 'MyFont';
   font-size: 18px;
   letter-spacing: 0.2em;
   color: var(--green);
@@ -178,7 +183,7 @@ h1 {
   background: transparent;
   border: none;
   cursor: none;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: 28px;
   letter-spacing: 0.3em;
   color: var(--cyan);
@@ -200,7 +205,7 @@ h1 {
   background: transparent;
   border: none;
   cursor: none;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: 28px;
   letter-spacing: 0.3em;
   color: var(--cyan);
@@ -248,7 +253,7 @@ h1 {
 }
 
 #welcome-text {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: clamp(40px, 8vw, 80px);
   letter-spacing: 0.15em;
   color: var(--green);
@@ -335,7 +340,7 @@ h1 {
 }
 
 .chapter-end-text {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: clamp(24px, 4vw, 48px);
   letter-spacing: 0.18em;
   color: var(--green);
@@ -350,7 +355,7 @@ h1 {
   background: transparent;
   border: none;
   cursor: none;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: 22px;
   letter-spacing: 0.35em;
   color: var(--cyan);
@@ -390,7 +395,7 @@ h1 {
 }
 
 .decision-question {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: clamp(32px, 6vw, 72px);
   letter-spacing: 0.15em;
   color: #fff;
@@ -413,7 +418,7 @@ h1 {
   background: transparent;
   border: none;
   cursor: none;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: 28px;
   letter-spacing: 0.35em;
   padding: 20px 60px;
@@ -470,7 +475,7 @@ h1 {
 }
 
 .ending-line {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: clamp(24px, 4.5vw, 56px);
   letter-spacing: 0.15em;
   opacity: 0;
@@ -581,7 +586,7 @@ h1 {
 }
 
 .failure-glitch {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'MyFont';
   font-size: clamp(56px, 12vw, 140px);
   letter-spacing: 0.12em;
   color: #ff2040;
@@ -671,22 +676,6 @@ h1 {
   }
 }
 
-.failure-sub {
-  font-family: 'Space Mono', monospace;
-  font-size: clamp(10px, 1.5vw, 14px);
-  letter-spacing: 0.3em;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-}
-
-.failure-hint {
-  font-family: 'Space Mono', monospace;
-  font-size: clamp(9px, 1.2vw, 11px);
-  letter-spacing: 0.25em;
-  color: rgba(255, 32, 64, 0.6);
-  text-transform: uppercase;
-  animation: pulseOpacity 1.8s ease-in-out infinite;
-}
 
 @keyframes pulseOpacity {
 

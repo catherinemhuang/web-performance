@@ -498,57 +498,38 @@ new p5(function (p) {
     p.push();
     p.translate(x, y);
 
+    var numSpikes = 18;
+    var innerR = 25;
+    var outerR = 28;
 
-
-    // ── disc body ─────────────────────────────────────
-    // Shadow/glow underneath
-    p.fill(0, 200, 255, 18);
-    p.ellipse(0, 6, 70, 18);
-
-    // Main disc
-    p.fill(15, 15, 25);
-    p.ellipse(0, 2, 60, 14);
-
-    // Disc highlight rim
-    p.fill(0, 180, 255, 120);
-    p.ellipse(0, 0, 60, 12);
-
-    // Disc sheen
-    p.fill(80, 220, 255, 60);
-    p.ellipse(-8, -1, 30, 5);
-
-    // ── dome ──────────────────────────────────────────
-    p.fill(10, 10, 20, 230);
-    p.ellipse(0, -4, 30, 18);
-
-    // Dome glass tint
-    p.fill(0, 200, 255, 30);
-    p.ellipse(0, -5, 28, 16);
-
-    // Dome highlight
-    p.fill(150, 230, 255, 80);
-    p.ellipse(-5, -8, 10, 6);
-
-    // ── rotating lights around disc rim ───────────────
-    var numLights = 6;
-    for (var i = 0; i < numLights; i++) {
-      var angle = this.lightAngle + (i / numLights) * p.TWO_PI;
-      var lx = Math.cos(angle) * 24;
-      var ly = Math.sin(angle) * 5 + 2;
-      var brightness = 0.5 + 0.5 * Math.sin(angle * 2 + p.frameCount * 0.1);
-      // Alternate green/cyan lights
-      if (i % 2 === 0) p.fill(0, 255, 150, 200 * brightness);
-      else             p.fill(0, 200, 255, 200 * brightness);
-      p.circle(lx, ly, 4);
-    }
-
-    // ── antenna ───────────────────────────────────────
-    p.stroke(0, 200, 255, 120);
-    p.strokeWeight(1);
-    p.line(0, -13, 0, -20);
+    // Outer glow
     p.noStroke();
-    p.fill(0, 255, 150, 180);
-    p.circle(0, -21, 4);
+    p.fill(224, 119, 238, 22);
+    p.circle(0, 0, (outerR + 13) * 2);
+    p.fill(224, 119, 238, 44);
+    p.circle(0, 0, (outerR + 5) * 2);
+
+    // Spiky star body (rotates via lightAngle)
+    p.fill(5, 132, 212);
+    p.stroke(255, 255, 255, 160);
+    p.strokeWeight(0.5);
+    p.beginShape();
+    for (var i = 0; i < numSpikes; i++) {
+      var outerAngle = this.lightAngle + (i / numSpikes) * p.TWO_PI;
+      var innerAngle = this.lightAngle + ((i + 0.5) / numSpikes) * p.TWO_PI;
+      p.vertex(Math.cos(outerAngle) * outerR, Math.sin(outerAngle) * outerR);
+      p.vertex(Math.cos(innerAngle) * innerR, Math.sin(innerAngle) * innerR);
+    }
+    p.endShape(p.CLOSE);
+
+    // Core sphere
+    p.noStroke();
+    p.fill(89, 201, 188);
+    p.circle(0, 0, innerR * 2);
+
+    // Highlight
+    p.fill(182, 236, 162, 190);
+    p.circle(-4, -5, 7);
 
     p.pop();
   };
