@@ -107,6 +107,7 @@ new p5(function (p) {
           "NEXT CHAPTER \u2192",
           function() {
             window.gameState = "Chapter2";
+                snake.speed *= 1.25;
             window.Chapter2generated = false;
             window.foods = [];
             resetSnake();
@@ -131,6 +132,8 @@ new p5(function (p) {
           "NEXT CHAPTER \u2192",
           function() {
             window.gameState = "Chapter3";
+                snake.speed *= 1.4;
+
             window.Chapter3generated = false;
             window.foods = [];
             resetSnake();
@@ -307,7 +310,6 @@ new p5(function (p) {
     snake.body.push(snake.head.copy());
     snake.len = 25;
     snake.size = 10;
-    snake.speed = 2.5;
     snakeHealth = 100;
     lastEatTime = performance.now();
     failureShown = false;
