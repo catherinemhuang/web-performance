@@ -181,6 +181,10 @@ new p5(function (p) {
       snake.show();
     }
 
+    if (window.gameState === "theEnd") {
+      drawTheEndGame();
+    }
+
     if (isChapterActive && !failureShown) {
       drawHealthBar();
     }
@@ -189,7 +193,7 @@ new p5(function (p) {
   function Chapter1() {
     if (!window.Chapter1generated) {
       window.foods = [];
-      generateTextPoints("Are we alone in this universe?");
+      generateTextPoints("Are we alone here?");
       generateRandomFood(80);
       window.Chapter1generated = true;
       snakeHealth = 100;
@@ -304,6 +308,8 @@ new p5(function (p) {
             decisionActive = false;
             window.foods = [];
             window.gameState = "endingYes";
+            var dl = document.getElementById('decision-label');
+            if (dl && dl.parentNode) dl.parentNode.removeChild(dl);
             showEndingScreen(
               "endingYes",
               ["Radio signal sent.", "It was received by an unknown.", "They are coming."],
@@ -316,6 +322,8 @@ new p5(function (p) {
             decisionActive = false;
             window.foods = [];
             window.gameState = "endingNo";
+            var dl = document.getElementById('decision-label');
+            if (dl && dl.parentNode) dl.parentNode.removeChild(dl);
             showEndingScreen(
               "endingNo",
               ["Peace in the solar system continues.", "But not for much longer."],
@@ -465,7 +473,7 @@ new p5(function (p) {
       overlay.classList.remove("visible");
       setTimeout(function() {
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        ["chapter-end-overlay","decision-overlay","endingYes-overlay","endingNo-overlay"].forEach(function(id) {
+        ["chapter-end-overlay","decision-overlay","endingYes-overlay","endingNo-overlay","decision-label"].forEach(function(id) {
           var el = document.getElementById(id);
           if (el && el.parentNode) el.parentNode.removeChild(el);
         });
@@ -636,27 +644,11 @@ UFO.prototype.draw = function() {
     var step = 8;
 
     // ── Question label ──
-    var labelCanvas = document.createElement('canvas');
-    labelCanvas.width = p.width;
-    labelCanvas.height = p.height;
-    var labelCtx = labelCanvas.getContext('2d');
-    labelCtx.fillStyle = 'black';
-    labelCtx.fillRect(0, 0, p.width, p.height);
-    labelCtx.fillStyle = 'white';
-    labelCtx.font = 'bold 48px monospace';
-    labelCtx.textAlign = 'center';
-    labelCtx.textBaseline = 'middle';
-    labelCtx.fillText('SEND A RADIO SIGNAL?', p.width / 2, p.height * 0.22);
-
-    var labelPixels = labelCtx.getImageData(0, 0, p.width, p.height).data;
-    for (var x = 0; x < p.width; x += step) {
-      for (var y = 0; y < p.height; y += step) {
-        var idx = (x + y * p.width) * 4;
-        if (labelPixels[idx] > 50) {
-          window.foods.push({ pos: p.createVector(x, y), isText: true, choice: 'label' });
-        }
-      }
-    }
+    var labelEl = document.createElement('div');
+    labelEl.id = 'decision-label';
+    labelEl.style.cssText = 'position:fixed;top:18%;left:0;right:0;text-align:center;font-family:\'MyFont\',monospace;font-size:24px;letter-spacing:0.3em;color:#fff;pointer-events:none;z-index:50;text-transform:uppercase;';
+    labelEl.textContent = 'Send a radio signal?';
+    document.body.appendChild(labelEl);
 
     // ── YES — left side ──
     var yesCanvas = document.createElement('canvas');
@@ -727,6 +719,16 @@ UFO.prototype.draw = function() {
         overlay.classList.add("visible");
       });
     });
+
+    // After 5 seconds fade out, then launch THE END shooter
+    setTimeout(function() {
+      overlay.style.transition = "opacity 1s ease";
+      overlay.style.opacity = "0";
+      setTimeout(function() {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        initTheEndGame();
+      }, 1000);
+    }, 5000);
   }
 
   function drawDotBorderLocal(canvas, color, spacing) {
@@ -749,6 +751,174 @@ UFO.prototype.draw = function() {
           ctx.fill();
         }
       }
+    }
+  }
+
+  // ─── THE END — SPACE INVADERS ────────────────────────
+
+  var theEndDots = [];       // target dots making up "THE END"
+  var bullets = [];          // player bullets flying upward
+  var shootCooldown = 0;     // frames until next shot allowed
+  var theEndCleared = false; // true once all dots destroyed
+
+  function initTheEndGame() {
+    theEndDots = [];
+    bullets = [];
+    shootCooldown = 0;
+    theEndCleared = false;
+    window.gameState = "theEnd";
+
+    // Render "THE END" onto an offscreen canvas and sample dots
+    var off = document.createElement('canvas');
+    off.width = p.width;
+    off.height = p.height;
+    var ctx = off.getContext('2d');
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, p.width, p.height);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 130px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('THE END', p.width / 2, p.height * 0.35);
+
+    var pixels = ctx.getImageData(0, 0, p.width, p.height).data;
+    var step = 10;
+    for (var x = 0; x < p.width; x += step) {
+      for (var y = 0; y < p.height; y += step) {
+        var idx = (x + y * p.width) * 4;
+        if (pixels[idx] > 50) {
+          theEndDots.push({ x: x, y: y, alive: true });
+        }
+      }
+    }
+  }
+
+  function drawTheEndGame() {
+    // ── Shooter fires toward mouse position ──
+    // Auto-fire: shoot every 8 frames
+    shootCooldown--;
+    if (shootCooldown <= 0 && p.mouseX >= 0 && p.mouseX <= p.width) {
+      var bx = p.mouseX;
+      var by = p.height - 30;
+      // Aim straight upward toward the mouse Y (always fires upward)
+      var ang = Math.atan2(p.mouseY - by, p.mouseX - bx);
+      // Clamp: only allow angles pointing upward (between -PI and 0)
+      if (ang >= 0) ang = -Math.PI / 2;
+      var speed = 9;
+      bullets.push({ x: bx, y: by, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed });
+      shootCooldown = 8;
+    }
+
+    // ── Update & draw bullets ──
+    p.noStroke();
+    for (var i = bullets.length - 1; i >= 0; i--) {
+      bullets[i].x += bullets[i].vx;
+      bullets[i].y += bullets[i].vy;
+
+      // Remove if off screen
+      if (bullets[i].y < 0 || bullets[i].x < 0 || bullets[i].x > p.width) {
+        bullets.splice(i, 1);
+        continue;
+      }
+
+      // Check collision with theEndDots
+      var hit = false;
+      for (var j = theEndDots.length - 1; j >= 0; j--) {
+        if (!theEndDots[j].alive) continue;
+        var d = p.dist(bullets[i].x, bullets[i].y, theEndDots[j].x, theEndDots[j].y);
+        if (d < 10) {
+          theEndDots[j].alive = false;
+          bullets.splice(i, 1);
+          hit = true;
+          // Play a tiny hit note
+          var now = performance.now();
+          if (now - lastNoteTime > 60) {
+            lastNoteTime = now;
+            synth.triggerAttackRelease('C5', '32n');
+          }
+          break;
+        }
+      }
+
+      if (!hit && i < bullets.length) {
+        // Draw bullet: small bright cyan dot with trail glow
+        p.fill(0, 255, 150, 200);
+        p.circle(bullets[i].x, bullets[i].y, 5);
+        p.fill(0, 255, 150, 60);
+        p.circle(bullets[i].x, bullets[i].y + 6, 7);
+      }
+    }
+
+    // ── Draw THE END dots ──
+    var alive = 0;
+    for (var k = 0; k < theEndDots.length; k++) {
+      if (!theEndDots[k].alive) continue;
+      alive++;
+      // Pulse: brightness flickers gently
+      var flicker = 180 + 75 * Math.sin(p.frameCount * 0.04 + k * 0.3);
+      p.fill(255, 255, 255, flicker);
+      p.noStroke();
+      p.circle(theEndDots[k].x, theEndDots[k].y, 7);
+    }
+
+    // ── Draw shooter indicator at bottom (follows mouse X) ──
+    var sx = p.constrain(p.mouseX, 20, p.width - 20);
+    var sy = p.height - 30;
+    p.noStroke();
+    // Glow base
+    p.fill(0, 200, 255, 30);
+    p.circle(sx, sy, 36);
+    p.fill(0, 200, 255, 70);
+    p.circle(sx, sy, 22);
+    // Core
+    p.fill(0, 200, 255, 230);
+    p.circle(sx, sy, 12);
+    // Barrel tip
+    p.fill(0, 255, 150, 200);
+    p.circle(sx, sy - 10, 5);
+
+
+    // ── Check cleared ──
+    if (alive === 0 && !theEndCleared) {
+      theEndCleared = true;
+      setTimeout(function() {
+        var el = document.createElement('div');
+        el.id = 'transmission-complete';
+        el.style.cssText = 'position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999;cursor:none;';
+        el.innerHTML =
+          '<div style="font-family:\'MyFont\',monospace;font-size:24px;letter-spacing:0.4em;color:rgba(0,255,150,0.7);text-transform:uppercase;">transmission complete</div>' +
+        document.body.appendChild(el);
+
+        el.addEventListener('click', function() {
+          el.style.transition = 'opacity 0.6s ease';
+          el.style.opacity = '0';
+          setTimeout(function() {
+            if (el.parentNode) el.parentNode.removeChild(el);
+            // Reset all state and go back to intro
+            window.foods = [];
+            window.Chapter1generated = false;
+            window.Chapter2generated = false;
+            window.Chapter3generated = false;
+            decisionActive = false;
+            decisionYesLeft = 0;
+            decisionNoLeft = 0;
+            theEndDots = [];
+            bullets = [];
+            theEndCleared = false;
+            var dlEl = document.getElementById('decision-label');
+            if (dlEl && dlEl.parentNode) dlEl.parentNode.removeChild(dlEl);
+            resetSnake();
+            snake.speed = 2.5;
+            var ui = document.getElementById('ui');
+            var welcome = document.getElementById('welcome');
+            if (ui) ui.style.display = '';
+            if (welcome) welcome.classList.remove('show');
+            window.gameState = 'intro';
+            generateTextPoints('We are human.');
+            generateRandomFood(150);
+          }, 600);
+        });
+      }, 200);
     }
   }
 
