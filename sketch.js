@@ -67,7 +67,7 @@ new p5(function (p) {
     failureShown = false;
     ufos = [];
 
-    generateTextPoints("We are human.", 0);
+    generateTextPoints("THE VOID", 0);
     generateRandomFood(150);
   };
 
@@ -878,7 +878,7 @@ new p5(function (p) {
     ctx.font = 'bold 130px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('THE END', p.width / 2, p.height * 0.35);
+    ctx.fillText('THE VOID', p.width / 2, p.height * 0.35);
 
     var pixels = ctx.getImageData(0, 0, p.width, p.height).data;
     var step = 10;
@@ -1006,7 +1006,7 @@ new p5(function (p) {
             if (ui) ui.style.display = '';
             if (welcome) welcome.classList.remove('show');
             window.gameState = 'intro';
-            generateTextPoints('We are human.', 0);
+            generateTextPoints('THE VOID', 0);
             generateRandomFood(150);
           }, 600);
         });
