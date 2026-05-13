@@ -1,8 +1,25 @@
+let handshake = document.querySelector("#handshake");
+
+handshake.addEventListener("click", async () => {
+	await Tone.start();
+	handshake.style.display = "none";
+});
+
 new p5(function (p) {
 
   let snake;
   let lastNoteTime = 0;
   var notes = ['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','G5','A5'];
+
+  // ─── HEALTH / DECAY SYSTEM ───────────────────────────
+  var snakeHealth = 100;
+  var lastEatTime = 0;
+  var HEALTH_DRAIN_PER_MS = 0.02; // drains fully in ~20s; requires ~5 dots/sec
+  var HEALTH_PER_EAT = 3;
+  var MIN_SNAKE_SIZE = 3;
+  var failureShown = false;
+  var ufos = [];
+  var failureReason = "starved"; // "starved" or "caught"
 
   // Create synth immediately — it exists before any user interaction
   var synth = new Tone.Synth({
@@ -33,6 +50,11 @@ new p5(function (p) {
     window.Chapter2generated = false;
     window.Chapter3generated = false;
 
+    snakeHealth = 100;
+    lastEatTime = performance.now();
+    failureShown = false;
+    ufos = [];
+
     generateTextPoints("We are human.");
     generateRandomFood(150);
   };
@@ -43,6 +65,25 @@ new p5(function (p) {
 
   p.draw = function () {
     p.background(10);
+
+    var isChapterActive = (window.gameState === "Chapter1" ||
+                           window.gameState === "Chapter2" ||
+                           window.gameState === "Chapter3");
+
+    if (isChapterActive && !failureShown) {
+      var now = performance.now();
+      var elapsed = now - lastEatTime;
+      snakeHealth = Math.max(0, snakeHealth - elapsed * HEALTH_DRAIN_PER_MS);
+      lastEatTime = now;
+
+      if (snakeHealth < 30) {
+        snake.size = Math.max(MIN_SNAKE_SIZE, snake.size - 0.04);
+      }
+
+      if (snakeHealth <= 0 || snake.size <= MIN_SNAKE_SIZE) {
+        triggerFailure("starved");
+      }
+    }
 
     if (window.gameState === "intro") {
       drawFoods();
@@ -56,6 +97,7 @@ new p5(function (p) {
       snake.update();
       snake.show();
       checkEating();
+      updateUFOs();
 
       if (window.Chapter1generated && textFoodsLeft() === 0) {
         window.gameState = "Chapter1complete";
@@ -79,6 +121,7 @@ new p5(function (p) {
       snake.update();
       snake.show();
       checkEating();
+      updateUFOs();
 
       if (window.Chapter2generated && textFoodsLeft() === 0) {
         window.gameState = "Chapter2complete";
@@ -102,6 +145,7 @@ new p5(function (p) {
       snake.update();
       snake.show();
       checkEating();
+      updateUFOs();
 
       if (window.Chapter3generated && textFoodsLeft() === 0) {
         window.gameState = "Chapter3complete";
@@ -118,6 +162,10 @@ new p5(function (p) {
       snake.update();
       snake.show();
     }
+
+    if (isChapterActive && !failureShown) {
+      drawHealthBar();
+    }
   };
 
   function Chapter1() {
@@ -126,6 +174,10 @@ new p5(function (p) {
       generateTextPoints("Are we alone in this universe?");
       generateRandomFood(80);
       window.Chapter1generated = true;
+      snakeHealth = 100;
+      lastEatTime = performance.now();
+      failureShown = false;
+      spawnUFOs(1);
     }
     drawFoods();
   }
@@ -136,6 +188,10 @@ new p5(function (p) {
       generateTextPoints("What could be out there?");
       generateRandomFood(80);
       window.Chapter2generated = true;
+      snakeHealth = 100;
+      lastEatTime = performance.now();
+      failureShown = false;
+      spawnUFOs(2);
     }
     drawFoods();
   }
@@ -146,6 +202,10 @@ new p5(function (p) {
       generateTextPoints("Are they like us?");
       generateRandomFood(80);
       window.Chapter3generated = true;
+      snakeHealth = 100;
+      lastEatTime = performance.now();
+      failureShown = false;
+      spawnUFOs(3);
     }
     drawFoods();
   }
@@ -226,6 +286,10 @@ new p5(function (p) {
 
         snake.grow();
 
+        // ─── HEALTH RESTORE ON EAT ───────────────────────
+        snakeHealth = Math.min(100, snakeHealth + HEALTH_PER_EAT);
+        lastEatTime = performance.now();
+
         // throttle notes: max one every 80ms so rapid eating never stacks audio calls
         var now = performance.now();
         if (now - lastNoteTime > 80) {
@@ -244,6 +308,10 @@ new p5(function (p) {
     snake.len = 25;
     snake.size = 10;
     snake.speed = 2.5;
+    snakeHealth = 100;
+    lastEatTime = performance.now();
+    failureShown = false;
+    ufos = [];
   }
 
   window.resetSnake = resetSnake;
@@ -279,6 +347,208 @@ new p5(function (p) {
       p.fill(0, 200, 255);
       p.circle(pos.x, pos.y, s);
     }
+  };
+
+  // ─── HEALTH BAR ──────────────────────────────────────
+  function drawHealthBar() {
+    var barW = 200, barH = 6;
+    var x = p.width / 2 - barW / 2, y = 28;
+    var fill = (snakeHealth / 100) * barW;
+    var r, g, b;
+    if (snakeHealth > 60) {
+      var t = (snakeHealth - 60) / 40;
+      r = 0; g = p.lerp(200, 255, t); b = p.lerp(255, 150, t);
+    } else if (snakeHealth > 25) {
+      var t = (snakeHealth - 25) / 35;
+      r = p.lerp(255, 0, t); g = 200; b = p.lerp(0, 255, t);
+    } else {
+      var pulse = 0.6 + 0.4 * Math.sin(performance.now() * 0.015);
+      r = 255; g = p.lerp(0, 180, snakeHealth / 25) * pulse; b = 0;
+    }
+    p.noStroke();
+    p.fill(255, 255, 255, 20);
+    p.rect(x, y, barW, barH, 3);
+    p.fill(r, g, b, 220);
+    p.rect(x, y, fill, barH, 3);
+    if (snakeHealth < 25) {
+      p.fill(r, g, b, 40);
+      p.rect(x - 2, y - 2, barW + 4, barH + 4, 4);
+    }
+    p.textFont('monospace'); p.textSize(8); p.textAlign(p.CENTER);
+    p.fill(r, g, b, 180);
+    p.text('FEED RATE', p.width / 2, y - 6);
+    p.textSize(7); p.fill(255, 255, 255, 50);
+    p.text('5 DOTS/SEC REQUIRED', p.width / 2, y + barH + 10);
+  }
+
+  // ─── FAILURE ─────────────────────────────────────────
+  function triggerFailure(reason) {
+    if (failureShown) return;
+    failureShown = true;
+    failureReason = reason || "starved";
+    window.gameState = "failed";
+    ufos = [];
+    showFailureScreen();
+  }
+
+  function showFailureScreen() {
+    if (document.getElementById("failure-overlay")) return;
+    var sub = failureReason === "caught"
+      ? "YOU WERE ABDUCTED BY THE ALIEN FLEET"
+      : "THE ENTITY STARVED AND DISSOLVED";
+    var overlay = document.createElement("div");
+    overlay.id = "failure-overlay";
+    overlay.innerHTML =
+      '<div class="failure-inner">' +
+        '<div class="failure-glitch" data-text="SIGNAL LOST">SIGNAL LOST</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() { overlay.classList.add("visible"); });
+    });
+    overlay.addEventListener("click", function() {
+      overlay.classList.remove("visible");
+      setTimeout(function() {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        ["chapter-end-overlay","decision-overlay","endingYes-overlay","endingNo-overlay"].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        });
+        var ui = document.getElementById("ui");
+        if (ui) ui.style.display = '';
+        var welcome = document.getElementById("welcome");
+        if (welcome) welcome.classList.remove("show");
+        window.gameState = "intro";
+        window.foods = [];
+        window.Chapter1generated = false;
+        window.Chapter2generated = false;
+        window.Chapter3generated = false;
+        resetSnake();
+        generateTextPoints("We are human.");
+        generateRandomFood(150);
+      }, 800);
+    });
+  }
+
+  // ─── UFO SYSTEM ──────────────────────────────────────
+  function spawnUFOs(count) {
+    ufos = [];
+    for (var i = 0; i < count; i++) {
+      // Spawn each UFO at a random edge of the screen
+      var edge = Math.floor(Math.random() * 4);
+      var x, y;
+      if (edge === 0)      { x = p.random(p.width); y = -60; }
+      else if (edge === 1) { x = p.random(p.width); y = p.height + 60; }
+      else if (edge === 2) { x = -60; y = p.random(p.height); }
+      else                 { x = p.width + 60; y = p.random(p.height); }
+      // Stagger speeds so multiple UFOs don't stack on top of each other
+      ufos.push(new UFO(x, y, 0.8 + i * 0.3));
+    }
+  }
+
+  function updateUFOs() {
+    for (var i = 0; i < ufos.length; i++) {
+      ufos[i].update();
+      ufos[i].draw();
+      if (ufos[i].collides(snake.head, snake.size)) {
+        triggerFailure("caught");
+        return;
+      }
+    }
+  }
+
+  function UFO(startX, startY, spd) {
+    this.pos = p.createVector(startX, startY);
+    this.speed = spd;
+    this.wobbleOffset = p.random(1000); // so each UFO wobbles independently
+    this.beamFlicker = 0;
+    this.lightAngle = 0;
+  }
+
+  UFO.prototype.update = function() {
+    // Chase the snake head with slight wobble perpendicular to direction
+    var target = snake.head.copy();
+    var dir = p5.Vector.sub(target, this.pos);
+    var d = dir.mag();
+
+    // Add a sinusoidal wobble perpendicular to movement direction
+    dir.normalize();
+    var perp = p.createVector(-dir.y, dir.x);
+    var wobble = Math.sin(p.frameCount * 0.05 + this.wobbleOffset) * 1.5;
+    var move = p5.Vector.add(
+      p5.Vector.mult(dir, this.speed),
+      p5.Vector.mult(perp, wobble)
+    );
+    this.pos.add(move);
+
+    this.beamFlicker = 0.6 + 0.4 * Math.sin(p.frameCount * 0.12 + this.wobbleOffset);
+    this.lightAngle += 0.04;
+  };
+
+  UFO.prototype.collides = function(headPos, headSize) {
+    var d = p.dist(this.pos.x, this.pos.y, headPos.x, headPos.y);
+    return d < (28 + headSize * 0.5); // disc radius ~28 + half the snake head
+  };
+
+  UFO.prototype.draw = function() {
+    var x = this.pos.x, y = this.pos.y;
+
+    p.push();
+    p.translate(x, y);
+
+
+
+    // ── disc body ─────────────────────────────────────
+    // Shadow/glow underneath
+    p.fill(0, 200, 255, 18);
+    p.ellipse(0, 6, 70, 18);
+
+    // Main disc
+    p.fill(15, 15, 25);
+    p.ellipse(0, 2, 60, 14);
+
+    // Disc highlight rim
+    p.fill(0, 180, 255, 120);
+    p.ellipse(0, 0, 60, 12);
+
+    // Disc sheen
+    p.fill(80, 220, 255, 60);
+    p.ellipse(-8, -1, 30, 5);
+
+    // ── dome ──────────────────────────────────────────
+    p.fill(10, 10, 20, 230);
+    p.ellipse(0, -4, 30, 18);
+
+    // Dome glass tint
+    p.fill(0, 200, 255, 30);
+    p.ellipse(0, -5, 28, 16);
+
+    // Dome highlight
+    p.fill(150, 230, 255, 80);
+    p.ellipse(-5, -8, 10, 6);
+
+    // ── rotating lights around disc rim ───────────────
+    var numLights = 6;
+    for (var i = 0; i < numLights; i++) {
+      var angle = this.lightAngle + (i / numLights) * p.TWO_PI;
+      var lx = Math.cos(angle) * 24;
+      var ly = Math.sin(angle) * 5 + 2;
+      var brightness = 0.5 + 0.5 * Math.sin(angle * 2 + p.frameCount * 0.1);
+      // Alternate green/cyan lights
+      if (i % 2 === 0) p.fill(0, 255, 150, 200 * brightness);
+      else             p.fill(0, 200, 255, 200 * brightness);
+      p.circle(lx, ly, 4);
+    }
+
+    // ── antenna ───────────────────────────────────────
+    p.stroke(0, 200, 255, 120);
+    p.strokeWeight(1);
+    p.line(0, -13, 0, -20);
+    p.noStroke();
+    p.fill(0, 255, 150, 180);
+    p.circle(0, -21, 4);
+
+    p.pop();
   };
 
   function showChapterEndUI(bottomText, btnLabel, onNext) {
