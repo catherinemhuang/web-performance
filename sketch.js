@@ -21,6 +21,11 @@ new p5(function (p) {
   var ufos = [];
   var failureReason = "starved"; // "starved" or "caught"
 
+  // ─── DECISION STATE ──────────────────────────────────
+  var decisionYesLeft = 0;
+  var decisionNoLeft = 0;
+  var decisionActive = false;
+
   // Create synth immediately — it exists before any user interaction
   var synth = new Tone.Synth({
     oscillator: { type: 'sine' },
@@ -158,10 +163,20 @@ new p5(function (p) {
     }
 
     if (window.gameState === "Chapter1complete" ||
-        window.gameState === "Chapter2complete" ||
-        window.gameState === "Chapter3complete" ||
-        window.gameState === "endingYes" ||
-        window.gameState === "endingNo") {
+        window.gameState === "Chapter2complete") {
+      snake.update();
+      snake.show();
+    }
+
+    // Decision state: snake eats YES / NO dots
+    if (window.gameState === "Chapter3complete") {
+      drawFoods();
+      snake.update();
+      snake.show();
+      checkEating();
+    }
+
+    if (window.gameState === "endingYes" || window.gameState === "endingNo") {
       snake.update();
       snake.show();
     }
@@ -253,8 +268,10 @@ new p5(function (p) {
   function drawFoods() {
     p.noStroke();
     window.foods.forEach(function(f) {
-      if (f.isText) p.fill(255);
-      else p.fill(0, 255, 150);
+      if (f.choice === 'yes')       p.fill(0, 255, 150);   // green
+      else if (f.choice === 'no')   p.fill(0, 200, 255);   // cyan
+      else if (f.isText)            p.fill(255);            // white
+      else                          p.fill(0, 255, 150);    // random food
       p.circle(f.pos.x, f.pos.y, 6);
     });
   }
@@ -274,8 +291,39 @@ new p5(function (p) {
       var d = p.dist(snake.head.x, snake.head.y, window.foods[i].pos.x, window.foods[i].pos.y);
       if (d < snake.size) {
         var wasText = window.foods[i].isText;
+        var choice  = window.foods[i].choice;
         window.foods.splice(i, 1);
         eaten++;
+
+        // ─── DECISION DOT TRACKING ───────────────────
+        if (decisionActive) {
+          if (choice === 'yes') decisionYesLeft--;
+          if (choice === 'no')  decisionNoLeft--;
+
+          if (choice === 'yes' && decisionYesLeft <= 0) {
+            decisionActive = false;
+            window.foods = [];
+            window.gameState = "endingYes";
+            showEndingScreen(
+              "endingYes",
+              ["Radio signal sent.", "It was received by an unknown.", "They are coming."],
+              ["var(--green)", "rgba(255,255,255,0.85)", "var(--green)"]
+            );
+            return;
+          }
+
+          if (choice === 'no' && decisionNoLeft <= 0) {
+            decisionActive = false;
+            window.foods = [];
+            window.gameState = "endingNo";
+            showEndingScreen(
+              "endingNo",
+              ["Peace in the solar system continues.", "But not for much longer."],
+              ["var(--cyan)", "rgba(255,255,255,0.6)"]
+            );
+            return;
+          }
+        }
 
         if (!wasText &&
             window.gameState !== "Chapter1complete" &&
@@ -384,10 +432,18 @@ new p5(function (p) {
   }
 
   // ─── FAILURE ─────────────────────────────────────────
+  var lastActiveChapter = "Chapter1"; // track which chapter we died in
+
   function triggerFailure(reason) {
     if (failureShown) return;
     failureShown = true;
     failureReason = reason || "starved";
+    // Remember which chapter we were on before overwriting gameState
+    if (window.gameState === "Chapter1" ||
+        window.gameState === "Chapter2" ||
+        window.gameState === "Chapter3") {
+      lastActiveChapter = window.gameState;
+    }
     window.gameState = "failed";
     ufos = [];
     showFailureScreen();
@@ -395,9 +451,6 @@ new p5(function (p) {
 
   function showFailureScreen() {
     if (document.getElementById("failure-overlay")) return;
-    var sub = failureReason === "caught"
-      ? "YOU WERE ABDUCTED BY THE ALIEN FLEET"
-      : "THE ENTITY STARVED AND DISSOLVED";
     var overlay = document.createElement("div");
     overlay.id = "failure-overlay";
     overlay.innerHTML =
@@ -416,18 +469,23 @@ new p5(function (p) {
           var el = document.getElementById(id);
           if (el && el.parentNode) el.parentNode.removeChild(el);
         });
-        var ui = document.getElementById("ui");
-        if (ui) ui.style.display = '';
-        var welcome = document.getElementById("welcome");
-        if (welcome) welcome.classList.remove("show");
-        window.gameState = "intro";
         window.foods = [];
         window.Chapter1generated = false;
         window.Chapter2generated = false;
         window.Chapter3generated = false;
+        decisionActive = false;
+        decisionYesLeft = 0;
+        decisionNoLeft = 0;
         resetSnake();
-        generateTextPoints("We are human.");
-        generateRandomFood(150);
+        // Restore speed for the chapter we're restarting
+        if (lastActiveChapter === "Chapter2") {
+          snake.speed = 2.5 * 1.25;
+        } else if (lastActiveChapter === "Chapter3") {
+          snake.speed = 2.5 * 1.25 * 1.4;
+        } else {
+          snake.speed = 2.5;
+        }
+        window.gameState = lastActiveChapter;
       }, 800);
     });
   }
@@ -491,8 +549,7 @@ new p5(function (p) {
     var d = p.dist(this.pos.x, this.pos.y, headPos.x, headPos.y);
     return d < (28 + headSize * 0.5); // disc radius ~28 + half the snake head
   };
-
-  UFO.prototype.draw = function() {
+UFO.prototype.draw = function() {
     var x = this.pos.x, y = this.pos.y;
 
     p.push();
@@ -533,7 +590,6 @@ new p5(function (p) {
 
     p.pop();
   };
-
   function showChapterEndUI(bottomText, btnLabel, onNext) {
     if (document.getElementById("chapter-end-overlay")) return;
 
@@ -572,60 +628,83 @@ new p5(function (p) {
   }
 
   function showDecisionUI() {
-    if (document.getElementById("decision-overlay")) return;
+    decisionActive = true;
+    decisionYesLeft = 0;
+    decisionNoLeft = 0;
+    window.foods = [];
 
-    var overlay = document.createElement("div");
-    overlay.id = "decision-overlay";
-    overlay.innerHTML =
-      '<div class="decision-question">Should we send out a radio signal?</div>' +
-      '<div class="decision-btns">' +
-        '<div class="btn-wrap decision-btn-wrap">' +
-          '<canvas class="dots-canvas decision-dots-yes"></canvas>' +
-          '<button class="decision-btn yes-btn">YES</button>' +
-        '</div>' +
-        '<div class="btn-wrap decision-btn-wrap">' +
-          '<canvas class="dots-canvas decision-dots-no"></canvas>' +
-          '<button class="decision-btn no-btn">NO</button>' +
-        '</div>' +
-      '</div>';
-    document.body.appendChild(overlay);
+    var step = 8;
 
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        overlay.classList.add("visible");
-        var wraps = overlay.querySelectorAll(".decision-btn-wrap");
-        var canvases = [overlay.querySelector(".decision-dots-yes"), overlay.querySelector(".decision-dots-no")];
-        canvases.forEach(function(c, idx) {
-          if (c && wraps[idx]) {
-            c.width = wraps[idx].offsetWidth;
-            c.height = wraps[idx].offsetHeight;
-            drawDotBorderLocal(c, idx === 0 ? "rgba(0,255,150,0.5)" : "rgba(0,200,255,0.5)");
-          }
-        });
-      });
-    });
+    // ── Question label ──
+    var labelCanvas = document.createElement('canvas');
+    labelCanvas.width = p.width;
+    labelCanvas.height = p.height;
+    var labelCtx = labelCanvas.getContext('2d');
+    labelCtx.fillStyle = 'black';
+    labelCtx.fillRect(0, 0, p.width, p.height);
+    labelCtx.fillStyle = 'white';
+    labelCtx.font = 'bold 48px monospace';
+    labelCtx.textAlign = 'center';
+    labelCtx.textBaseline = 'middle';
+    labelCtx.fillText('SEND A RADIO SIGNAL?', p.width / 2, p.height * 0.22);
 
-    overlay.querySelector(".yes-btn").addEventListener("click", function() {
-      overlay.classList.remove("visible");
-      setTimeout(function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 600);
-      showEndingScreen(
-        "endingYes",
-        ["Radio signal sent.", "It was received by an unknown.", "They are coming."],
-        ["var(--green)", "rgba(255,255,255,0.85)", "var(--green)"]
-      );
-      window.gameState = "endingYes";
-    });
+    var labelPixels = labelCtx.getImageData(0, 0, p.width, p.height).data;
+    for (var x = 0; x < p.width; x += step) {
+      for (var y = 0; y < p.height; y += step) {
+        var idx = (x + y * p.width) * 4;
+        if (labelPixels[idx] > 50) {
+          window.foods.push({ pos: p.createVector(x, y), isText: true, choice: 'label' });
+        }
+      }
+    }
 
-    overlay.querySelector(".no-btn").addEventListener("click", function() {
-      overlay.classList.remove("visible");
-      setTimeout(function() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 600);
-      showEndingScreen(
-        "endingNo",
-        ["Peace in the solar system continues.", "But not for much longer."],
-        ["var(--cyan)", "rgba(255,255,255,0.6)"]
-      );
-      window.gameState = "endingNo";
-    });
+    // ── YES — left side ──
+    var yesCanvas = document.createElement('canvas');
+    yesCanvas.width = p.width;
+    yesCanvas.height = p.height;
+    var yesCtx = yesCanvas.getContext('2d');
+    yesCtx.fillStyle = 'black';
+    yesCtx.fillRect(0, 0, p.width, p.height);
+    yesCtx.fillStyle = 'white';
+    yesCtx.font = 'bold 120px monospace';
+    yesCtx.textAlign = 'center';
+    yesCtx.textBaseline = 'middle';
+    yesCtx.fillText('YES', p.width * 0.28, p.height * 0.58);
+
+    var yesPixels = yesCtx.getImageData(0, 0, p.width, p.height).data;
+    for (var x = 0; x < p.width; x += step) {
+      for (var y = 0; y < p.height; y += step) {
+        var idx = (x + y * p.width) * 4;
+        if (yesPixels[idx] > 50) {
+          window.foods.push({ pos: p.createVector(x, y), isText: true, choice: 'yes' });
+          decisionYesLeft++;
+        }
+      }
+    }
+
+    // ── NO — right side ──
+    var noCanvas = document.createElement('canvas');
+    noCanvas.width = p.width;
+    noCanvas.height = p.height;
+    var noCtx = noCanvas.getContext('2d');
+    noCtx.fillStyle = 'black';
+    noCtx.fillRect(0, 0, p.width, p.height);
+    noCtx.fillStyle = 'white';
+    noCtx.font = 'bold 120px monospace';
+    noCtx.textAlign = 'center';
+    noCtx.textBaseline = 'middle';
+    noCtx.fillText('NO', p.width * 0.72, p.height * 0.58);
+
+    var noPixels = noCtx.getImageData(0, 0, p.width, p.height).data;
+    for (var x = 0; x < p.width; x += step) {
+      for (var y = 0; y < p.height; y += step) {
+        var idx = (x + y * p.width) * 4;
+        if (noPixels[idx] > 50) {
+          window.foods.push({ pos: p.createVector(x, y), isText: true, choice: 'no' });
+          decisionNoLeft++;
+        }
+      }
+    }
   }
 
   function showEndingScreen(id, lines, colors) {
