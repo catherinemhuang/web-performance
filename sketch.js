@@ -200,7 +200,7 @@ new p5(function (p) {
   function Chapter1() {
     if (!window.Chapter1generated) {
       window.foods = [];
-      generateTextPoints("Are we?", 0);
+      generateTextPoints("Are we alone here?", 0);
       generateRandomFood(80);
       window.Chapter1generated = true;
       snakeHealth = 100;
@@ -214,7 +214,7 @@ new p5(function (p) {
   function Chapter2() {
     if (!window.Chapter2generated) {
       window.foods = [];
-      generateTextPoints("What could?", 2);
+      generateTextPoints("What could be out there?", 2);
       generateRandomFood(80);
       window.Chapter2generated = true;
       snakeHealth = 100;
@@ -228,7 +228,7 @@ new p5(function (p) {
   function Chapter3() {
     if (!window.Chapter3generated) {
       window.foods = [];
-      generateTextPoints("Are they?", 3);
+      generateTextPoints("Are they like us?", 3);
       generateRandomFood(80);
       window.Chapter3generated = true;
       snakeHealth = 100;
@@ -608,8 +608,8 @@ new p5(function (p) {
     var overlay = document.createElement("div");
     overlay.id = "chapter-end-overlay";
     overlay.innerHTML =
-      '<div class="chapter-end-text">' + bottomText + '</div>' +
-      '<div class="btn-wrap chapter-end-btn-wrap">' +
+      '<div class="chapter-end-text"></div>' +
+      '<div class="btn-wrap chapter-end-btn-wrap" style="opacity:0;transition:opacity 0.5s ease;">' +
         '<canvas class="dots-canvas chapter-end-dots-canvas"></canvas>' +
         '<button class="chapter-end-btn">' + btnLabel + '</button>' +
       '</div>';
@@ -618,13 +618,45 @@ new p5(function (p) {
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         overlay.classList.add("visible");
+
+        // ── Typewriter effect ──
+        var textEl = overlay.querySelector(".chapter-end-text");
         var btnWrap = overlay.querySelector(".chapter-end-btn-wrap");
         var dotCanvas = overlay.querySelector(".chapter-end-dots-canvas");
-        if (dotCanvas && btnWrap) {
-          dotCanvas.width = btnWrap.offsetWidth;
-          dotCanvas.height = btnWrap.offsetHeight;
-          drawDotBorderLocal(dotCanvas, "rgba(0,200,255,0.5)");
-        }
+        var chars = bottomText.split('');
+        var idx = 0;
+        var cursor = '\u258C'; // block cursor character
+
+        textEl.textContent = cursor;
+
+        var typeInterval = setInterval(function() {
+          if (idx < chars.length) {
+            textEl.textContent = bottomText.slice(0, idx + 1) + cursor;
+            idx++;
+          } else {
+            // Blink cursor 3 times then remove it and show button
+            textEl.textContent = bottomText + cursor;
+            var blinks = 0;
+            var blinkInterval = setInterval(function() {
+              textEl.textContent = (blinks % 2 === 0)
+                ? bottomText
+                : bottomText + cursor;
+              blinks++;
+              if (blinks >= 6) {
+                clearInterval(blinkInterval);
+                textEl.textContent = bottomText;
+                // Reveal the button
+                btnWrap.style.opacity = '1';
+                if (dotCanvas && btnWrap) {
+                  dotCanvas.width = btnWrap.offsetWidth;
+                  dotCanvas.height = btnWrap.offsetHeight;
+                  drawDotBorderLocal(dotCanvas, "rgba(0,200,255,0.5)");
+                }
+              }
+            }, 300);
+            clearInterval(typeInterval);
+          }
+        }, 55); // ms per character
       });
     });
 
