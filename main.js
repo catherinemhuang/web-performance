@@ -56,44 +56,33 @@ function drawDotBorder(canvas, color, spacing = 10) {
 }
 
 function initDotCanvases() {
-  const inputDots = getEl('input-dots');
   const btnDots = getEl('btn-dots');
+  const btnWrap = document.querySelector('#ui .btn-wrap');
 
-  const inputWrap = document.querySelector('.dot-input-container');
-  const btnWrap = document.querySelector('.btn-wrap');
-
-  if (!inputWrap || !btnWrap || !inputDots || !btnDots) return;
-
-  inputDots.width = inputWrap.offsetWidth;
-  inputDots.height = inputWrap.offsetHeight;
+  if (!btnWrap || !btnDots) return;
 
   btnDots.width = btnWrap.offsetWidth;
   btnDots.height = btnWrap.offsetHeight;
 
-  drawDotBorder(inputDots, 'rgba(212, 255, 0, 1)');
   drawDotBorder(btnDots, 'rgba(255, 71, 227, 0.75)');
+
+  const btnDotsWelcome = getEl('btn-dots-welcome');
+  const welcomeBtnWrap = document.querySelector('#welcome .btn-wrap');
+  if (btnDotsWelcome && welcomeBtnWrap) {
+    btnDotsWelcome.width = welcomeBtnWrap.offsetWidth;
+    btnDotsWelcome.height = welcomeBtnWrap.offsetHeight;
+  }
 }
 
 // Run AFTER DOM is ready (fixes most bugs)
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(initDotCanvases, 100);
 
-  // ─── Input display ──────────────────
-  const nameInput = getEl('name-input');
-  const nameDisplay = getEl('name-display');
-
-  if (nameInput && nameDisplay) {
-    nameInput.addEventListener('input', () => {
-      nameDisplay.textContent = nameInput.value;
-    });
-  }
-
   // ─── Start button ───────────────────
   const startBtn = getEl('start-btn');
   if (startBtn) {
     startBtn.addEventListener('click', () => {
-      const name = (nameInput?.value || '').trim() || 'STRANGER';
-      const fullText = `WELCOME, ${name.toUpperCase()}`;
+      const fullText = 'WELCOME, STRANGER';
 
       const welcome = getEl('welcome');
       const welcomeText = getEl('welcome-text');
@@ -101,39 +90,38 @@ window.addEventListener('DOMContentLoaded', () => {
 
       if (!welcome || !welcomeText) return;
 
-      // Hide the button until typing is done
-      if (startBtn1) startBtn1.style.opacity = '0';
+      // Hide the home UI
+      const ui = getEl('ui');
+      if (ui) { ui.style.opacity = '0'; ui.style.pointerEvents = 'none'; }
 
+      // Force welcome visible before transition
+      welcome.style.display = 'flex';
+      welcome.style.zIndex = '500';
       welcomeText.textContent = '';
-      welcome.classList.add('show');
 
-      // Typewriter
-      const cursor = '\u258C';
+      // Let display:flex take effect before opacity transition
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          welcome.classList.add('show');
+        });
+      });
+
+      // Hide LET'S GO until typing finishes
+      if (startBtn1) { startBtn1.style.opacity = '0'; startBtn1.style.pointerEvents = 'none'; }
+
+      // Typewriter — letter by letter, no blink
       let idx = 0;
-      welcomeText.textContent = cursor;
-
       const typeInterval = setInterval(() => {
         if (idx < fullText.length) {
-          welcomeText.textContent = fullText.slice(0, idx + 1) + cursor;
+          welcomeText.textContent = fullText.slice(0, idx + 1);
           idx++;
         } else {
-          // Blink cursor 3 times then reveal button
-          let blinks = 0;
-          const blinkInterval = setInterval(() => {
-            welcomeText.textContent = (blinks % 2 === 0)
-              ? fullText
-              : fullText + cursor;
-            blinks++;
-            if (blinks >= 6) {
-              clearInterval(blinkInterval);
-              welcomeText.textContent = fullText;
-              if (startBtn1) {
-                startBtn1.style.transition = 'opacity 0.5s ease';
-                startBtn1.style.opacity = '1';
-              }
-            }
-          }, 300);
           clearInterval(typeInterval);
+          if (startBtn1) {
+            startBtn1.style.transition = 'opacity 0.5s ease';
+            startBtn1.style.opacity = '1';
+            startBtn1.style.pointerEvents = 'all';
+          }
         }
       }, 60);
     });
@@ -146,17 +134,13 @@ window.addEventListener('DOMContentLoaded', () => {
       const ui = getEl('ui');
       const welcome = getEl('welcome');
 
-      if (ui) ui.style.display = 'none';
-      if (welcome) welcome.classList.remove('show');
+      if (ui) { ui.style.display = 'none'; ui.style.opacity = ''; ui.style.pointerEvents = ''; }
+      if (welcome) { welcome.classList.remove('show'); welcome.style.display = ''; welcome.style.zIndex = ''; }
 
-      // IMPORTANT: switch global state
       window.gameState = "Chapter1";
-
-      // reset scene safely for p5
       window.foods = [];
       window.Chapter1generated = false;
 
-      // reset snake size to original
       if (window.resetSnake) window.resetSnake();
     });
   }
