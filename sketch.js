@@ -397,32 +397,49 @@ new p5(function (p) {
 
   function generateTextPoints(txt, scatter) {
     scatter = scatter || 0;
-    var offscreen = document.createElement('canvas');
-    offscreen.width = p.width;
-    offscreen.height = p.height;
-    var ctx = offscreen.getContext('2d');
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, p.width, p.height);
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 80px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(txt, p.width / 2, p.height * 0.3);
 
-    var imageData = ctx.getImageData(0, 0, p.width, p.height);
-    var pixels = imageData.data;
-    var step = 8;
+    var words = txt.split(' ');
+    var padding = 80;
+    var fontSize = 95;
 
-    for (var x = 0; x < p.width; x += step) {
-      for (var y = 0; y < p.height; y += step) {
-        var i = (x + y * p.width) * 4;
-        if (pixels[i] > 50) {
-          var ox = scatter > 0 ? p.random(-scatter, scatter) : 0;
-          var oy = scatter > 0 ? p.random(-scatter, scatter) : 0;
-          window.foods.push({ pos: p.createVector(x + ox, y + oy), isText: true });
+    // Divide screen into equal horizontal lanes — left-to-right reading order preserved
+    var laneW = (p.width - padding * 2) / words.length;
+
+    words.forEach(function(word, idx) {
+      var wordW = word.length * fontSize * 0.62;
+
+      // x constrained to this word's lane
+      var laneX = padding + idx * laneW;
+      var wx = p.random(laneX, Math.max(laneX + 10, laneX + laneW - wordW));
+      // y fully random
+      var wy = p.random(padding + fontSize, p.height - padding);
+
+      var off = document.createElement('canvas');
+      off.width  = p.width;
+      off.height = p.height;
+      var ctx = off.getContext('2d');
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, p.width, p.height);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold ' + fontSize + 'px monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(word, wx, wy);
+
+      var pixels = ctx.getImageData(0, 0, p.width, p.height).data;
+      var step = 8;
+
+      for (var x = 0; x < p.width; x += step) {
+        for (var y = 0; y < p.height; y += step) {
+          var i = (x + y * p.width) * 4;
+          if (pixels[i] > 50) {
+            var ox = scatter > 0 ? p.random(-scatter, scatter) : 0;
+            var oy = scatter > 0 ? p.random(-scatter, scatter) : 0;
+            window.foods.push({ pos: p.createVector(x + ox, y + oy), isText: true });
+          }
         }
       }
-    }
+    });
   }
 
   function generateRandomFood(n) {
@@ -976,7 +993,7 @@ new p5(function (p) {
 
     var labelEl = document.createElement('div');
     labelEl.id = 'decision-label';
-    labelEl.style.cssText = 'position:fixed;top:18%;left:0;right:0;text-align:center;font-family:\'Space Mono\',monospace;font-size:18px;letter-spacing:0.3em;color:#fff;pointer-events:none;z-index:50;text-transform:uppercase;';
+    labelEl.style.cssText = 'position:fixed;top:18%;left:0;right:0;text-align:center;font-family:\'MyFont\',sans-serif;font-size:clamp(36px,5vw,64px);letter-spacing:0.25em;color:#fff;pointer-events:none;z-index:50;text-transform:uppercase;';
     labelEl.textContent = 'Send a radio signal?';
     document.body.appendChild(labelEl);
 
