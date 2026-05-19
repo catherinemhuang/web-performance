@@ -339,7 +339,7 @@ new p5(function (p) {
         '#instructions-overlay.show{opacity:1;}',
         '#instructions-lines{',
           'font-family:"Space Mono",monospace;',
-          'font-size:clamp(13px,1.5vw,17px);',
+          'font-size:clamp(26px,1.5vw,17px);',
           'color:rgba(0,255,150,0.85);',
           'letter-spacing:0.15em;',
           'text-align:center;',
@@ -347,11 +347,11 @@ new p5(function (p) {
           'white-space:pre;',
         '}',
         '#instructions-hint{',
-          'margin-top:40px;',
+          'margin-top:60px;',
           'font-family:"Space Mono",monospace;',
           'font-size:clamp(16px,2vw,22px);',
           'font-weight:500;',
-          'color:rgba(0, 234, 255, 0.88);',
+          'color:rgba(0, 255, 149, 0.51);',
           'letter-spacing:0.3em;',
           'text-transform:uppercase;',
           'animation:pulse 2.5s ease-in-out infinite;',
@@ -823,15 +823,15 @@ new p5(function (p) {
     if (!document.getElementById("failure-subtitle-style")) {
       var styleEl = document.createElement("style");
       styleEl.id = "failure-subtitle-style";
-      styleEl.textContent = '.failure-subtitle{margin-top:18px;font-family:"Space Mono",monospace;font-size:clamp(18px,2.5vw,30px);font-weight:700;letter-spacing:0.2em;color:rgba(255,32,64,1);text-transform:lowercase;}';
+      styleEl.textContent = '.failure-subtitle{margin-top:18px;font-family:"Space Mono",monospace;font-size:clamp(18px,2.5vw,30px);font-weight:700;letter-spacing:0.2em;color:rgba(255, 32, 65, 0.48);}';
       document.head.appendChild(styleEl);
     }
 
     var overlay = document.createElement("div");
     overlay.id = "failure-overlay";
     var subtitle = failureReason === "caught"
-      ? "you were eaten, try again"
-      : "you starved to death, try again";
+      ? "YOU WERE EATEN, TRY AGAIN"
+      : "YOU STARVED TO DEATH, TRY AGAIN";
     overlay.innerHTML =
       '<div class="failure-inner">' +
       '<div class="failure-glitch" data-text="SIGNAL LOST">SIGNAL LOST</div>' +
