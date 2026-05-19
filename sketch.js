@@ -278,7 +278,7 @@ new p5(function (p) {
 
   function triggerWelcomeScreen() {
     // Clear all intro button dots (text + border) immediately
-    window.foods = window.foods.filter(function(f) { return !f.isIntroBtn; });
+    window.foods = window.foods.filter(function (f) { return !f.isIntroBtn; });
     introBtnDotsLeft = 0;
 
     var welcome = document.getElementById('welcome');
@@ -296,12 +296,12 @@ new p5(function (p) {
     welcome.style.zIndex = '500';
     welcomeText.textContent = '';
 
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() { welcome.classList.add('show'); });
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { welcome.classList.add('show'); });
     });
 
     // Letter-by-letter typewriter
-    var typeInterval = setInterval(function() {
+    var typeInterval = setInterval(function () {
       if (idx < fullText.length) {
         welcomeText.textContent = fullText.slice(0, idx + 1);
         idx++;
@@ -311,7 +311,7 @@ new p5(function (p) {
     }, 80);
 
     // Auto-advance to Chapter 1 after 5 seconds
-    setTimeout(function() {
+    setTimeout(function () {
       welcome.classList.remove('show');
       welcome.style.display = '';
       welcome.style.zIndex = '';
@@ -383,8 +383,8 @@ new p5(function (p) {
     // Stagger adding them to window.foods over ~1.5s
     var delay = 1500 / allDots.length;
     var spawnStart = performance.now();
-    allDots.forEach(function(dot, idx) {
-      setTimeout(function() {
+    allDots.forEach(function (dot, idx) {
+      setTimeout(function () {
         dot.spawnedAt = performance.now();
         window.foods.push(dot);
         introBtnDotsLeft++;
@@ -405,7 +405,7 @@ new p5(function (p) {
     // Divide screen into equal horizontal lanes — left-to-right reading order preserved
     var laneW = (p.width - padding * 2) / words.length;
 
-    words.forEach(function(word, idx) {
+    words.forEach(function (word, idx) {
       var wordW = word.length * fontSize * 0.62;
 
       // x constrained to this word's lane
@@ -415,7 +415,7 @@ new p5(function (p) {
       var wy = p.random(padding + fontSize, p.height - padding);
 
       var off = document.createElement('canvas');
-      off.width  = p.width;
+      off.width = p.width;
       off.height = p.height;
       var ctx = off.getContext('2d');
       ctx.fillStyle = 'black';
@@ -791,97 +791,97 @@ new p5(function (p) {
     return d < (28 + headSize * 0.5);
   };
 
-    UFO.prototype.draw = function () {
-  var x = this.pos.x, y = this.pos.y;
-  p.push();
-  p.translate(x, y);
+  UFO.prototype.draw = function () {
+    var x = this.pos.x, y = this.pos.y;
+    p.push();
+    p.translate(x, y);
 
-  var outerR = 22;
-  var innerR = 22 * (1 - 30 / 100);
-  var spikes = 3;
-  var pulse = 0.6 + 0.4 * Math.sin(p.frameCount * 0.0560 + this.wobbleOffset);
+    var outerR = 22;
+    var innerR = 22 * (1 - 30 / 100);
+    var spikes = 3;
+    var pulse = 0.6 + 0.4 * Math.sin(p.frameCount * 0.0560 + this.wobbleOffset);
 
-  p.noStroke();
-  p.fill(235, 0, 94, 20);
-  p.circle(0, 0, (outerR + 9 + 18) * 2);
-  p.fill(235, 0, 94, 38);
-  p.circle(0, 0, (outerR + 9) * 2);
+    p.noStroke();
+    p.fill(235, 0, 94, 20);
+    p.circle(0, 0, (outerR + 9 + 18) * 2);
+    p.fill(235, 0, 94, 38);
+    p.circle(0, 0, (outerR + 9) * 2);
 
-  p.push();
-  p.rotate(this.lightAngle * 0.0180 / 0.0180 * 0.4);
-  p.stroke(235, 0, 94, 150);
-  p.strokeWeight(1);
-  p.noFill();
-  p.beginShape();
-  for (var i = 0; i < 12; i++) {
-    var a = (i / 12) * p.TWO_PI;
-    var r = (i % 2 === 0) ? 36 : 36 * 0.42;
-    p.vertex(Math.cos(a) * r, Math.sin(a) * r);
-  }
-  p.endShape(p.CLOSE);
-  p.strokeWeight(1.5);
-  p.stroke(235, 0, 94, 230);
-  for (var i = 0; i < 4; i++) {
-    var a = (i / 4) * p.TWO_PI;
-    p.line(Math.cos(a)*(36+2), Math.sin(a)*(36+2), Math.cos(a)*(36+12), Math.sin(a)*(36+12));
-  }
-  p.strokeWeight(0.9);
-  p.stroke(235, 0, 94, 150);
-  for (var i = 0; i < 4; i++) {
-    var a = ((i+0.5)/4)*p.TWO_PI;
-    p.line(Math.cos(a)*(26), Math.sin(a)*(26), Math.cos(a)*(26+9), Math.sin(a)*(26+9));
-  }
-  p.pop();
+    p.push();
+    p.rotate(this.lightAngle * 0.0180 / 0.0180 * 0.4);
+    p.stroke(235, 0, 94, 150);
+    p.strokeWeight(1);
+    p.noFill();
+    p.beginShape();
+    for (var i = 0; i < 12; i++) {
+      var a = (i / 12) * p.TWO_PI;
+      var r = (i % 2 === 0) ? 36 : 36 * 0.42;
+      p.vertex(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    p.endShape(p.CLOSE);
+    p.strokeWeight(1.5);
+    p.stroke(235, 0, 94, 230);
+    for (var i = 0; i < 4; i++) {
+      var a = (i / 4) * p.TWO_PI;
+      p.line(Math.cos(a) * (36 + 2), Math.sin(a) * (36 + 2), Math.cos(a) * (36 + 12), Math.sin(a) * (36 + 12));
+    }
+    p.strokeWeight(0.9);
+    p.stroke(235, 0, 94, 150);
+    for (var i = 0; i < 4; i++) {
+      var a = ((i + 0.5) / 4) * p.TWO_PI;
+      p.line(Math.cos(a) * (26), Math.sin(a) * (26), Math.cos(a) * (26 + 9), Math.sin(a) * (26 + 9));
+    }
+    p.pop();
 
-  p.push();
-  p.rotate(-this.lightAngle);
-  p.fill(127, 5, 5);
-  p.stroke(28, 3, 3);
-  p.strokeWeight(1.4);
-  p.beginShape();
-  for (var i = 0; i < spikes * 2; i++) {
-    var a = (i / (spikes * 2)) * p.TWO_PI - p.HALF_PI;
-    var r = (i % 2 === 0) ? outerR : innerR;
-    p.vertex(Math.cos(a) * r, Math.sin(a) * r);
-  }
-  p.endShape(p.CLOSE);
+    p.push();
+    p.rotate(-this.lightAngle);
+    p.fill(127, 5, 5);
+    p.stroke(28, 3, 3);
+    p.strokeWeight(1.4);
+    p.beginShape();
+    for (var i = 0; i < spikes * 2; i++) {
+      var a = (i / (spikes * 2)) * p.TWO_PI - p.HALF_PI;
+      var r = (i % 2 === 0) ? outerR : innerR;
+      p.vertex(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    p.endShape(p.CLOSE);
 
-  p.stroke(255, 0, 187);
-  p.strokeWeight(1.6);
-  p.line(-10, 0, 10, 0);
-  p.line(0, -10, 0, 10);
+    p.stroke(255, 0, 187);
+    p.strokeWeight(1.6);
+    p.line(-10, 0, 10, 0);
+    p.line(0, -10, 0, 10);
 
-  p.strokeWeight(1.1);
-  p.line(-11, -11, 11, 11);
-  p.line(11, -11, -11, 11);
+    p.strokeWeight(1.1);
+    p.line(-11, -11, 11, 11);
+    p.line(11, -11, -11, 11);
 
-  p.noFill();
-  p.strokeWeight(1);
-  p.beginShape();
-  p.vertex(0, -16); p.vertex(16, 0);
-  p.vertex(0, 16); p.vertex(-16, 0);
-  p.endShape(p.CLOSE);
+    p.noFill();
+    p.strokeWeight(1);
+    p.beginShape();
+    p.vertex(0, -16); p.vertex(16, 0);
+    p.vertex(0, 16); p.vertex(-16, 0);
+    p.endShape(p.CLOSE);
 
-  p.stroke(28, 3, 3);
-  p.strokeWeight(1.4);
-  var br = outerR * 0.75, bk = 7;
-  p.beginShape(); p.vertex(-br, -(br-bk)); p.vertex(-br, -br); p.vertex(-(br-bk), -br); p.endShape();
-  p.beginShape(); p.vertex(br-bk, -br); p.vertex(br, -br); p.vertex(br, -(br-bk)); p.endShape();
-  p.beginShape(); p.vertex(br, br-bk); p.vertex(br, br); p.vertex(br-bk, br); p.endShape();
-  p.beginShape(); p.vertex(-(br-bk), br); p.vertex(-br, br); p.vertex(-br, br-bk); p.endShape();
-  p.pop();
+    p.stroke(28, 3, 3);
+    p.strokeWeight(1.4);
+    var br = outerR * 0.75, bk = 7;
+    p.beginShape(); p.vertex(-br, -(br - bk)); p.vertex(-br, -br); p.vertex(-(br - bk), -br); p.endShape();
+    p.beginShape(); p.vertex(br - bk, -br); p.vertex(br, -br); p.vertex(br, -(br - bk)); p.endShape();
+    p.beginShape(); p.vertex(br, br - bk); p.vertex(br, br); p.vertex(br - bk, br); p.endShape();
+    p.beginShape(); p.vertex(-(br - bk), br); p.vertex(-br, br); p.vertex(-br, br - bk); p.endShape();
+    p.pop();
 
-  p.noStroke();
-  p.fill(165, 67, 177, 255 * pulse);
-  p.beginShape();
-  p.vertex(0, -9); p.vertex(9, 0);
-  p.vertex(0, 9); p.vertex(-9, 0);
-  p.endShape(p.CLOSE);
-  p.fill(255, 245, 220, 220 * pulse);
-  p.circle(0, 0, 6);
+    p.noStroke();
+    p.fill(165, 67, 177, 255 * pulse);
+    p.beginShape();
+    p.vertex(0, -9); p.vertex(9, 0);
+    p.vertex(0, 9); p.vertex(-9, 0);
+    p.endShape(p.CLOSE);
+    p.fill(255, 245, 220, 220 * pulse);
+    p.circle(0, 0, 6);
 
-  p.pop();
-};
+    p.pop();
+  };
 
   // ─── CHAPTER END UI ──────────────────────────────────
 
@@ -939,8 +939,8 @@ new p5(function (p) {
     ctx.fillStyle = 'white';
     ctx.font = 'bold 72px monospace';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(labelText, p.width / 2, p.height * 0.78);
+    ctx.textBaseline = 'top';
+    ctx.fillText(labelText, p.width / 2, p.height * 0.1);
 
     var pixels = ctx.getImageData(0, 0, off.width, off.height).data;
     var step = 9;
@@ -989,6 +989,17 @@ new p5(function (p) {
     decisionNoLeft = 0;
     window.foods = [];
 
+    // ── Reset snake to bottom-center so it starts clear of YES/NO ──
+    snake.body = [];
+    snake.head = p.createVector(p.width / 2, p.height * 0.88);
+    snake.body.push(snake.head.copy());
+    snake.len = 25;
+    snake.size = 10;
+    snakeHealth = 100;
+    lastEatTime = performance.now();
+    failureShown = false;
+    ufos = [];
+    // ────────────────────────────────────────────────────────────────
     var step = 8;
 
     var labelEl = document.createElement('div');
@@ -1256,13 +1267,172 @@ new p5(function (p) {
       setTimeout(function () {
         var el = document.createElement('div');
         el.id = 'transmission-complete';
-        el.style.cssText = 'position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999;cursor:none;';
-        el.innerHTML =
-          '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(14px,2.5vw,22px);letter-spacing:0.4em;color:rgba(0, 255, 149, 0.81);text-transform:uppercase;">transmission complete</div>' +
+        el.style.cssText = 'position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999;cursor:none;background:#000;';
+        el.innerHTML = '<div style="font-family:\'Space Mono\',monospace;font-size:clamp(14px,2.5vw,22px);letter-spacing:0.4em;color:rgba(0,255,149,0.81);text-transform:uppercase;">transmission complete</div>';
         document.body.appendChild(el);
-
+        setTimeout(function () {
+          el.style.transition = 'opacity 1s ease';
+          el.style.opacity = '0';
+          setTimeout(function () {
+            if (el.parentNode) el.parentNode.removeChild(el);
+            initAlienEndScreen();
+          }, 1000);
+        }, 2500);
       }, 200);
     }
+  }
+
+  // ─── ALIEN END SCREEN ────────────────────────────────
+
+  var alienDots = [];
+  var alienFrame = 0;
+  var alienCanvasEl = null;
+
+  function initAlienEndScreen() {
+    window.gameState = 'alienEnd';
+    alienDots = [];
+    alienFrame = 0;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'alien-end-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:8000;cursor:none;';
+    document.body.appendChild(overlay);
+
+    alienCanvasEl = document.createElement('canvas');
+    alienCanvasEl.width = window.innerWidth;
+    alienCanvasEl.height = window.innerHeight;
+    alienCanvasEl.style.cssText = 'position:absolute;inset:0;opacity:0;transition:opacity 18s ease-in;';
+    overlay.appendChild(alienCanvasEl);
+    // Trigger fade-in on next frame so transition fires
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        alienCanvasEl.style.opacity = '1';
+      });
+    });
+
+    var W = alienCanvasEl.width;
+    var H = alienCanvasEl.height;
+    var cx = W / 2;
+    var cy = H / 2 - 20;
+
+    // ─── DRAW HEAD SHAPE TO OFFSCREEN CANVAS ─────────────
+    var off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    var oc = off.getContext('2d');
+
+    oc.fillStyle = 'white';
+    oc.beginPath();
+    oc.moveTo(cx, cy - 195);
+    oc.bezierCurveTo(cx + 145, cy - 195, cx + 165, cy - 60, cx + 140, cy + 30);
+    oc.bezierCurveTo(cx + 115, cy + 115, cx + 60, cy + 155, cx, cy + 165);
+    oc.bezierCurveTo(cx - 60, cy + 155, cx - 115, cy + 115, cx - 140, cy + 30);
+    oc.bezierCurveTo(cx - 165, cy - 60, cx - 145, cy - 195, cx, cy - 195);
+    oc.fill();
+
+    // ─── EYES ─────────────────────────────────────────────
+    var EYE_RX     = 60;
+    var EYE_RY     = 30;
+    var EYE_ROT    = -0.64;
+    var EYE_OFFSET_X = 79;
+    var EYE_OFFSET_Y = 20;
+
+    oc.fillStyle = 'black';
+    oc.save();
+    oc.translate(cx - EYE_OFFSET_X, cy + EYE_OFFSET_Y);
+    oc.rotate(-EYE_ROT);
+    oc.beginPath();
+    oc.ellipse(0, 0, EYE_RX, EYE_RY, 0, Math.PI * 2, false);
+    oc.fill();
+    oc.restore();
+
+    oc.save();
+    oc.translate(cx + EYE_OFFSET_X, cy + EYE_OFFSET_Y);
+    oc.rotate(EYE_ROT);
+    oc.beginPath();
+    oc.ellipse(0, 0, EYE_RX, EYE_RY, 0, Math.PI * 2, false);
+    oc.fill();
+    oc.restore();
+
+    var headPixels = oc.getImageData(0, 0, W, H).data;
+    for (var x = 0; x < W; x += 9) {
+      for (var y = 0; y < H; y += 9) {
+        var idx4 = (x + y * W) * 4;
+        if (headPixels[idx4] > 128) {
+          alienDots.push({ x: x, y: y, fo: Math.random() * Math.PI * 2, fs: 0.02 + Math.random() * 0.04, isText: false });
+        }
+      }
+    }
+
+    // ─── "THEY ARE COMING" TEXT INTO DOTS ────────────────
+    var toff = document.createElement('canvas');
+    toff.width = W; toff.height = H;
+    var tc = toff.getContext('2d');
+    tc.fillStyle = 'black';
+    tc.fillRect(0, 0, W, H);
+    tc.fillStyle = 'white';
+    tc.font = 'bold 100px monospace';
+    tc.textAlign = 'center';
+    tc.textBaseline = 'alphabetic';
+    tc.fillText('THEY ARE COMING', W / 2, H * 0.90);
+    var pd = tc.getImageData(0, 0, W, H).data;
+    for (var tx = 0; tx < W; tx += 8) {
+      for (var ty = 0; ty < H; ty += 8) {
+        var ti = (tx + ty * W) * 4;
+        if (pd[ti] > 128) {
+          alienDots.push({ x: tx, y: ty, fo: Math.random() * Math.PI * 2, fs: 0.025 + Math.random() * 0.04, isText: true });
+        }
+      }
+    }
+
+    var textStartTime = performance.now();
+
+    function drawAlien() {
+      if (window.gameState !== 'alienEnd') return;
+      requestAnimationFrame(drawAlien);
+
+      var actx = alienCanvasEl.getContext('2d');
+      actx.fillStyle = '#000';
+      actx.fillRect(0, 0, W, H);
+
+      var t = alienFrame * 0.001;
+      var elapsed = performance.now() - textStartTime;
+
+      for (var i = 0; i < alienDots.length; i++) {
+        var d = alienDots[i];
+        var a;
+
+        if (d.isText) {
+          // progress from 0 → 1 over 10 seconds
+          var progress = Math.min(1, elapsed / 10000);
+
+          // strong flicker at start, fades out gradually
+          var flickerStrength = (1 - progress) * 0.1;
+
+          // base opacity slowly increases
+          var baseAlpha = 0.15 + progress * 0.85;
+
+          // random flicker wave
+          var flicker =
+            Math.sin(alienFrame * d.fs * 2 + d.fo) *
+            flickerStrength;
+
+          // combine
+          a = Math.max(0.05, Math.min(1, baseAlpha + flicker));
+
+        } else {
+          a = Math.max(0.05, 0.45 + 0.55 * Math.sin(t / d.fs + d.fo));
+        }
+
+        actx.fillStyle = 'rgba(0,255,150,' + a.toFixed(2) + ')';
+        actx.beginPath();
+        actx.arc(d.x, d.y, d.isText ? 3 : 2.8, 0, Math.PI * 2);
+        actx.fill();
+      }
+
+      alienFrame++;
+    }
+
+    drawAlien();
   }
 
 });
