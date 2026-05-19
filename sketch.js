@@ -310,18 +310,137 @@ new p5(function (p) {
       }
     }, 80);
 
-    // Auto-advance to Chapter 1 after 5 seconds
+    // Auto-advance to instructions after 3 seconds
     setTimeout(function () {
       welcome.classList.remove('show');
       welcome.style.display = '';
       welcome.style.zIndex = '';
       if (startBtn1) startBtn1.style.display = '';
-
-      window.gameState = 'Chapter1';
-      window.foods = [];
-      window.Chapter1generated = false;
-      if (window.resetSnake) window.resetSnake();
+      showInstructions();
     }, 3000);
+  }
+
+  function showInstructions() {
+    // Hide THE VOID title and p5 canvas so they don't bleed through
+    removeIntroTitle();
+    var cnv = document.querySelector('#p5-canvas-container canvas');
+    if (cnv) cnv.style.opacity = '0';
+
+    if (!document.getElementById('instructions-style')) {
+      var styleEl = document.createElement('style');
+      styleEl.id = 'instructions-style';
+      styleEl.textContent = [
+        '#instructions-overlay{',
+          'position:fixed;inset:0;display:flex;flex-direction:column;',
+          'align-items:center;justify-content:center;gap:0;',
+          'background:#000;z-index:500;pointer-events:none;',
+          'opacity:0;transition:opacity 0.8s ease;',
+        '}',
+        '#instructions-overlay.show{opacity:1;}',
+        '#instructions-lines{',
+          'font-family:"Space Mono",monospace;',
+          'font-size:clamp(13px,1.5vw,17px);',
+          'color:rgba(0,255,150,0.85);',
+          'letter-spacing:0.15em;',
+          'text-align:center;',
+          'line-height:2.2;',
+          'white-space:pre;',
+        '}',
+        '#instructions-hint{',
+          'margin-top:40px;',
+          'font-family:"Space Mono",monospace;',
+          'font-size:clamp(16px,2vw,22px);',
+          'font-weight:500;',
+          'color:rgba(0, 234, 255, 0.88);',
+          'letter-spacing:0.3em;',
+          'text-transform:uppercase;',
+          'animation:pulse 2.5s ease-in-out infinite;',
+        '}'
+      ].join('');
+      document.head.appendChild(styleEl);
+    }
+
+    var overlay = document.createElement('div');
+    overlay.id = 'instructions-overlay';
+    overlay.innerHTML = '<div id="instructions-lines"></div><div id="instructions-hint" style="opacity:0;transition:opacity 0.8s ease;">click to begin</div>';
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { overlay.classList.add('show'); });
+    });
+
+    var lines = [
+      'EAT TO STAY ALIVE.',
+      'YOUR HEALTH DRAINS OVER TIME.',
+      'AVOID THE RED ENTITIES.',
+      'CONSUME ALL THE TEXT TO ADVANCE.'
+    ];
+
+    var linesEl = document.getElementById('instructions-lines');
+    var hintEl = document.getElementById('instructions-hint');
+    var lineIdx = 0;
+    var charIdx = 0;
+    var currentLine = '';
+    var ready = false;
+
+    function typeNext() {
+      if (lineIdx >= lines.length) {
+        // All lines done — show hint and unlock clicking
+        setTimeout(function() {
+          hintEl.style.opacity = '1';
+          ready = true;
+        }, 400);
+        return;
+      }
+      if (charIdx < lines[lineIdx].length) {
+        currentLine += lines[lineIdx][charIdx];
+        linesEl.textContent = linesEl.textContent.slice(0, linesEl.textContent.lastIndexOf('\n') + 1) + currentLine;
+        charIdx++;
+        setTimeout(typeNext, 120);
+      } else {
+        linesEl.textContent += '\n';
+        currentLine = '';
+        charIdx = 0;
+        lineIdx++;
+        setTimeout(typeNext, 220);
+      }
+    }
+
+    typeNext();
+
+    function startGame() {
+      if (!ready) return;
+      overlay.removeEventListener('click', startGame);
+      overlay.style.transition = 'opacity 1.2s ease';
+      overlay.style.opacity = '0';
+
+      // Fade the p5 canvas in as the overlay fades out
+      var cnv = document.querySelector('#p5-canvas-container canvas');
+      if (cnv) {
+        cnv.style.opacity = '0';
+        cnv.style.transition = 'opacity 1.4s ease';
+      }
+
+      setTimeout(function () {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        window.gameState = 'Chapter1';
+        window.foods = [];
+        window.Chapter1generated = false;
+        if (window.resetSnake) window.resetSnake();
+
+        // Now fade canvas in
+        if (cnv) {
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() { cnv.style.opacity = '1'; });
+          });
+        }
+      }, 1000);
+    }
+
+    overlay.style.pointerEvents = 'auto';
+    overlay.addEventListener('click', startGame);
+
+
   }
 
 
@@ -699,11 +818,24 @@ new p5(function (p) {
 
   function showFailureScreen() {
     if (document.getElementById("failure-overlay")) return;
+
+    // Inject subtitle style once
+    if (!document.getElementById("failure-subtitle-style")) {
+      var styleEl = document.createElement("style");
+      styleEl.id = "failure-subtitle-style";
+      styleEl.textContent = '.failure-subtitle{margin-top:18px;font-family:"Space Mono",monospace;font-size:clamp(18px,2.5vw,30px);font-weight:700;letter-spacing:0.2em;color:rgba(255,32,64,1);text-transform:lowercase;}';
+      document.head.appendChild(styleEl);
+    }
+
     var overlay = document.createElement("div");
     overlay.id = "failure-overlay";
+    var subtitle = failureReason === "caught"
+      ? "you were eaten, try again"
+      : "you starved to death, try again";
     overlay.innerHTML =
       '<div class="failure-inner">' +
       '<div class="failure-glitch" data-text="SIGNAL LOST">SIGNAL LOST</div>' +
+      '<div class="failure-subtitle">' + subtitle + '</div>' +
       '</div>';
     document.body.appendChild(overlay);
     requestAnimationFrame(function () {
@@ -1301,7 +1433,7 @@ new p5(function (p) {
     alienCanvasEl = document.createElement('canvas');
     alienCanvasEl.width = window.innerWidth;
     alienCanvasEl.height = window.innerHeight;
-    alienCanvasEl.style.cssText = 'position:absolute;inset:0;opacity:0;transition:opacity 18s ease-in;';
+    alienCanvasEl.style.cssText = 'position:absolute;inset:0;opacity:0;transition:opacity 4s ease-in;';
     overlay.appendChild(alienCanvasEl);
     // Trigger fade-in on next frame so transition fires
     requestAnimationFrame(function() {
